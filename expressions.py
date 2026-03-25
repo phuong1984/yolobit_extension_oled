@@ -222,6 +222,18 @@ def expr_square_love(e, shape="balanced"):
         _draw_heart(e, cx, EYE_CY, size=min(s["ew"], s["eh"]) - 6)
     e.draw_mouth(smile=10, width=26)
 
+def expr_square_look_left(e, shape="balanced"):
+    s = _sq(shape)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY, pupil_dx=-5, **s)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY, pupil_dx=-5, **s)
+    e.draw_mouth(smile=0, width=18)
+
+def expr_square_look_right(e, shape="balanced"):
+    s = _sq(shape)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY, pupil_dx=5, **s)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY, pupil_dx=5, **s)
+    e.draw_mouth(smile=0, width=18)
+
 
 SQUARE_EXPRESSIONS = {
     "normal":    expr_square_normal,
@@ -232,6 +244,8 @@ SQUARE_EXPRESSIONS = {
     "sleepy":    expr_square_sleepy,
     "wink":      expr_square_wink,
     "love":      expr_square_love,
+    "look_left": expr_square_look_left,
+    "look_right": expr_square_look_right,
 }
 
 def show_square_expression(eyes, shape="balanced", expr="normal"):
@@ -328,6 +342,18 @@ def expr_oval_love(e, shape="normal"):
         _draw_heart(e, cx, EYE_CY, size=min(s["inner_rx"], s["inner_ry"]) * 2 - 4)
     e.draw_mouth(smile=10, width=26)
 
+def expr_oval_look_left(e, shape="normal"):
+    s = _ov(shape)
+    e.draw_oval_eye(EYE_L_CX, EYE_CY, pupil_dx=-5, **s)
+    e.draw_oval_eye(EYE_R_CX, EYE_CY, pupil_dx=-5, **s)
+    e.draw_mouth(smile=0, width=18)
+
+def expr_oval_look_right(e, shape="normal"):
+    s = _ov(shape)
+    e.draw_oval_eye(EYE_L_CX, EYE_CY, pupil_dx=5, **s)
+    e.draw_oval_eye(EYE_R_CX, EYE_CY, pupil_dx=5, **s)
+    e.draw_mouth(smile=0, width=18)
+
 
 OVAL_EXPRESSIONS = {
     "normal":    expr_oval_normal,
@@ -338,6 +364,8 @@ OVAL_EXPRESSIONS = {
     "sleepy":    expr_oval_sleepy,
     "wink":      expr_oval_wink,
     "love":      expr_oval_love,
+    "look_left": expr_oval_look_left,
+    "look_right": expr_oval_look_right,
 }
 
 def show_oval_expression(eyes, shape="normal", expr="normal"):

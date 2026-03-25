@@ -171,6 +171,8 @@ const SQUARE_EXPR_OPTIONS = [
   ['😴 Sleepy',    'sleepy'],
   ['😉 Wink',      'wink'],
   ['😍 Love',      'love'],
+  ['👀 Look Left', 'look_left'],
+  ['👀 Look Right','look_right'],
 ];
 
 Blockly.Blocks['robot_show_square'] = {
@@ -227,6 +229,8 @@ const OVAL_EXPR_OPTIONS = [
   ['😴 Sleepy',    'sleepy'],
   ['😉 Wink',      'wink'],
   ['😍 Love',      'love'],
+  ['👀 Look Left', 'look_left'],
+  ['👀 Look Right','look_right'],
 ];
 
 Blockly.Blocks['robot_show_oval'] = {
