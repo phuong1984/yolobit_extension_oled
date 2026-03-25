@@ -7,6 +7,7 @@ import ssd1306
 import framebuf
 import time
 import math
+import gc
 
 SCREEN_W = 128
 SCREEN_H = 64
@@ -18,6 +19,29 @@ EYE_CY   = 32   # Eye center Y (vertical)
 EYE_W    = 28   # Default eye width
 EYE_H    = 28   # Default eye height
 PUPIL_R  = 6    # Pupil radius
+
+# Pre-computed trig tables for memory efficiency (0-360 degrees)
+_COS_TABLE = [math.cos(2 * math.pi * i / 360) for i in range(360)]
+_SIN_TABLE = [math.sin(2 * math.pi * i / 360) for i in range(360)]
+
+# Pre-computed sqrt table for ellipse (0-1 range, 100 steps)
+_SQRT_TABLE = [math.sqrt(i / 100) for i in range(101)]
+
+
+def _get_cos(deg):
+    """Get cos from pre-computed table."""
+    return _COS_TABLE[int(deg) % 360]
+
+
+def _get_sin(deg):
+    """Get sin from pre-computed table."""
+    return _SIN_TABLE[int(deg) % 360]
+
+
+def _get_sqrt(frac_x100):
+    """Get sqrt from pre-computed table."""
+    idx = max(0, min(100, int(frac_x100)))
+    return _SQRT_TABLE[idx]
 
 
 class Eyes:
@@ -39,36 +63,47 @@ class Eyes:
 
     def draw_filled_ellipse(self, cx, cy, rx, ry, color=1):
         """Draw a filled ellipse using horizontal line scan."""
+        if ry == 0:
+            return
+        
+        # Use pre-computed values, avoid float division in loop
         for dy in range(-ry, ry + 1):
-            if ry == 0:
-                continue
-            frac = 1 - (dy / ry) ** 2
+            # frac = 1 - (dy / ry) ** 2 → use lookup table
+            frac_idx = int(((dy / ry) ** 2) * 100) if ry != 0 else 0
+            frac = 1 - (frac_idx / 100)
             if frac < 0:
                 frac = 0
-            dx = int(rx * math.sqrt(frac))
+            dx = int(rx * math.sqrt(frac)) if frac > 0 else 0
             self.oled.hline(cx - dx, cy + dy, dx * 2 + 1, color)
 
     def draw_ellipse_outline(self, cx, cy, rx, ry, color=1):
         """Draw ellipse outline using parametric approach."""
         steps = max(rx, ry) * 4
+        if steps == 0:
+            return
+        
+        # Use pre-computed trig tables
         for i in range(steps):
-            angle = 2 * math.pi * i / steps
-            x = int(cx + rx * math.cos(angle))
-            y = int(cy + ry * math.sin(angle))
+            angle_deg = (360 * i) // steps
+            x = int(cx + rx * _get_cos(angle_deg))
+            y = int(cy + ry * _get_sin(angle_deg))
             if 0 <= x < SCREEN_W and 0 <= y < SCREEN_H:
                 self.oled.pixel(x, y, color)
 
     def draw_arc(self, cx, cy, r, start_deg, end_deg, color=1, thickness=2):
         """Draw arc from start_deg to end_deg."""
-        start_rad = math.radians(start_deg)
-        end_rad   = math.radians(end_deg)
         steps = max(20, r * 3)
+        if steps == 0:
+            return
+        
+        angle_range = end_deg - start_deg
+        
         for i in range(steps + 1):
-            angle = start_rad + (end_rad - start_rad) * i / steps
+            angle_deg = int(start_deg + (angle_range * i) / steps)
             for t in range(thickness):
                 rr = r - t
-                x = int(cx + rr * math.cos(angle))
-                y = int(cy + rr * math.sin(angle))
+                x = int(cx + rr * _get_cos(angle_deg))
+                y = int(cy + rr * _get_sin(angle_deg))
                 if 0 <= x < SCREEN_W and 0 <= y < SCREEN_H:
                     self.oled.pixel(x, y, color)
 
@@ -149,12 +184,12 @@ class Eyes:
         Draw an eyebrow.
         angle_deg : positive = outer end higher (angry inner), negative = opposite
         """
-        rad = math.radians(angle_deg)
+        # Use pre-computed trig tables
         half = length // 2
-        x1 = int(cx - half * math.cos(rad))
-        y1 = int(EYE_CY + offset_y + half * math.sin(rad))
-        x2 = int(cx + half * math.cos(rad))
-        y2 = int(EYE_CY + offset_y - half * math.sin(rad))
+        x1 = int(cx - half * _get_cos(angle_deg))
+        y1 = int(EYE_CY + offset_y + half * _get_sin(angle_deg))
+        x2 = int(cx + half * _get_cos(angle_deg))
+        y2 = int(EYE_CY + offset_y - half * _get_sin(angle_deg))
         for t in range(thickness):
             self.oled.line(x1, y1 + t, x2, y2 + t, color)
 
@@ -372,6 +407,7 @@ class Eyes:
         self.clear()
         draw_fn(*args, **kwargs)
         self.show()
+        gc.collect()
 
     def transition(self, from_fn, to_fn, steps=8, delay_ms=30):
         """
@@ -386,3 +422,4 @@ class Eyes:
                 to_fn()
             self.show()
             time.sleep_ms(delay_ms)
+        gc.collect()

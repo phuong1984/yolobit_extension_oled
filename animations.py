@@ -7,6 +7,34 @@ from expressions import show_expression, EXPRESSIONS, expr_normal
 import time
 import math
 import random
+import gc
+
+
+# ================================================================== #
+#  PRE-COMPUTED FRAMES (memory optimization)                          #
+# ================================================================== #
+
+# Blink close/open percentages (reused, no allocation in loop)
+_BLINK_CLOSE = (0.3, 0.6, 0.85, 1.0)
+_BLINK_OPEN = (0.7, 0.4, 0.15, 0.0)
+
+# Look around sequence (pre-computed)
+_LOOK_AROUND_SEQUENCE = [(-6, 0), (0, 0), (6, 0), (0, 0), (0, -4), (0, 4), (0, 0)]
+
+# Dizzy frames (pre-computed circle positions)
+_DIZZY_FRAMES = [
+    (int(5 * math.cos(2 * math.pi * i / 12)),
+     int(4 * math.sin(2 * math.pi * i / 12)))
+    for i in range(12)
+]
+
+# Wake up stages (pre-computed)
+_WAKE_UP_STAGES = [
+    (1, True,  False),  # (top_clip, half_open, normal)
+    (1, True,  False),
+    (0, True,  False),
+    (0, False, False),  # normal
+]
 
 
 # ================================================================== #
@@ -19,23 +47,27 @@ def anim_blink(e: Eyes, times=1, speed=1.0):
     speed: 1.0 = normal, 2.0 = fast, 0.5 = slow
     """
     delay = int(30 / speed)
+    hold_delay = int(60 / speed)
+    
     for _ in range(times):
         # Close
-        for close_pct in (0.3, 0.6, 0.85, 1.0):
+        for close_pct in _BLINK_CLOSE:
             e.clear()
             clip = int(EYE_H * close_pct)
             _draw_closing_eyes(e, clip)
             e.show()
             time.sleep_ms(delay)
         # Hold closed briefly
-        time.sleep_ms(int(60 / speed))
+        time.sleep_ms(hold_delay)
         # Open
-        for close_pct in (0.7, 0.4, 0.15, 0.0):
+        for close_pct in _BLINK_OPEN:
             e.clear()
             clip = int(EYE_H * close_pct)
             _draw_closing_eyes(e, clip)
             e.show()
             time.sleep_ms(delay)
+    
+    gc.collect()
 
 
 def _draw_closing_eyes(e: Eyes, clip_amount: int):
@@ -60,7 +92,7 @@ def anim_idle(e: Eyes, times=1, speed=1.0):
     # Run for a fixed duration per times unit (5 seconds per times)
     duration_ms = 5000 * times
     expression = "normal"
-    
+
     show_expression(e, expression)
     start = time.ticks_ms()
     next_blink = time.ticks_ms() + random.randint(2000, 4000)
@@ -72,6 +104,8 @@ def anim_idle(e: Eyes, times=1, speed=1.0):
             show_expression(e, expression)
             next_blink = time.ticks_ms() + random.randint(2000, 5000)
         time.sleep_ms(50)
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -81,16 +115,16 @@ def anim_idle(e: Eyes, times=1, speed=1.0):
 def anim_look_around(e: Eyes, times=1, speed=1.0):
     """Eyes scan left → right → up → down → center."""
     delay = int(200 / speed)
-    sequence = [
-        (-6, 0), (0, 0), (6, 0), (0, 0), (0, -4), (0, 4), (0, 0)
-    ]
+    
     for _ in range(times):
-        for dx, dy in sequence:
+        for dx, dy in _LOOK_AROUND_SEQUENCE:
             e.clear()
             e.draw_both_eyes(pupil_dx=dx, pupil_dy=dy)
             e.draw_mouth(smile=0, width=18)
             e.show()
             time.sleep_ms(delay)
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -99,13 +133,10 @@ def anim_look_around(e: Eyes, times=1, speed=1.0):
 
 def anim_dizzy(e: Eyes, times=2, speed=1.0):
     """Pupils rotate in circles — dizzy effect."""
-    steps = 12
     delay = int(60 / speed)
+    
     for _ in range(times):
-        for i in range(steps):
-            angle = 2 * math.pi * i / steps
-            dx = int(5 * math.cos(angle))
-            dy = int(4 * math.sin(angle))
+        for dx, dy in _DIZZY_FRAMES:
             e.clear()
             e.draw_both_eyes(pupil_dx=dx, pupil_dy=dy)
             # Dizzy spiral marks
@@ -113,6 +144,8 @@ def anim_dizzy(e: Eyes, times=2, speed=1.0):
             e.oled.hline(70, 16, 4, 1)
             e.show()
             time.sleep_ms(delay)
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -122,14 +155,9 @@ def anim_dizzy(e: Eyes, times=2, speed=1.0):
 def anim_wake_up(e: Eyes, times=1, speed=1.0):
     """Transition from sleepy to normal with gradual eye opening."""
     delay = int(80 / speed)
-    stages = [
-        (1, True,  False),  # (top_clip, half_open, normal)
-        (1, True,  False),
-        (0, True,  False),
-        (0, False, False),  # normal
-    ]
+    
     for _ in range(times):
-        for top, half, _ in stages:
+        for top, half, _ in _WAKE_UP_STAGES:
             e.clear()
             e.draw_eye(EYE_L_CX, EYE_CY, half_open=half)
             e.draw_eye(EYE_R_CX, EYE_CY, half_open=half)
@@ -138,6 +166,8 @@ def anim_wake_up(e: Eyes, times=1, speed=1.0):
         # Final blink
         anim_blink(e)
         show_expression(e, "normal")
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -159,6 +189,8 @@ def anim_shocked(e: Eyes, times=1, speed=1.0):
             e.oled.scroll(-2, 0)
             e.show()
             time.sleep_ms(int(30 / speed))
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -168,6 +200,7 @@ def anim_shocked(e: Eyes, times=1, speed=1.0):
 def anim_happy_bounce(e: Eyes, times=3, speed=1.0):
     """Bounce pupils upward with each happy pulse."""
     delay = int(100 / speed)
+    
     for _ in range(times):
         show_expression(e, "happy")
         time.sleep_ms(delay)
@@ -177,6 +210,8 @@ def anim_happy_bounce(e: Eyes, times=3, speed=1.0):
         e.show()
         time.sleep_ms(delay)
     show_expression(e, "happy")
+    
+    gc.collect()
 
 
 # ================================================================== #
@@ -203,6 +238,7 @@ def play_animation(eyes: Eyes, name: str, times=1, speed=1.0, **kwargs):
     if fn is None:
         raise ValueError("Unknown animation: {}".format(name))
     fn(eyes, times=times, speed=speed, **kwargs)
+    gc.collect()  # Final cleanup after animation
 
 
 # ================================================================== #
