@@ -99,6 +99,51 @@ class SSD1306:
     def text(self, string, x, y, col=1):
         self.framebuf.text(string, x, y, col)
 
+    def hline(self, x, y, w, col):
+        """Draw horizontal line - implemented directly for compatibility."""
+        for i in range(w):
+            self.framebuf.pixel(x + i, y, col)
+
+    def vline(self, x, y, h, col):
+        """Draw vertical line - implemented directly for compatibility."""
+        for i in range(h):
+            self.framebuf.pixel(x, y + i, col)
+
+    def line(self, x1, y1, x2, y2, col):
+        """Draw line using Bresenham's algorithm."""
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+        err = dx - dy
+        while True:
+            self.framebuf.pixel(x1, y1, col)
+            if x1 == x2 and y1 == y2:
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x1 += sx
+            if e2 < dx:
+                err += dx
+                y1 += sy
+
+    def rect(self, x, y, w, h, col):
+        """Draw rectangle outline."""
+        self.hline(x, y, w, col)
+        self.hline(x, y + h - 1, w, col)
+        self.vline(x, y, h, col)
+        self.vline(x + w - 1, y, h, col)
+
+    def fill_rect(self, x, y, w, h, col):
+        """Draw filled rectangle."""
+        for cy in range(y, y + h):
+            self.hline(x, cy, w, col)
+
+    def blit(self, fbuf, x, y, key=-1, palette=None):
+        """Blit framebuffer at position."""
+        self.framebuf.blit(fbuf, x, y, key, palette)
+
 
 class SSD1306_I2C(SSD1306):
     def __init__(self, width, height, i2c, addr=0x3c, external_vcc=False):
