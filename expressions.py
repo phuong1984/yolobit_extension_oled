@@ -52,8 +52,8 @@ def expr_angry(e: Eyes):
     # Angry eyebrows — outer ends lower
     e.draw_brow(EYE_L_CX, angle_deg=-12, offset_y=-17, length=22)
     e.draw_brow(EYE_R_CX, angle_deg=12,  offset_y=-17, length=22)
-    # Tight mouth
-    e.draw_mouth(smile=0, width=14)
+    # Tight mouth - upward curved (suppressed anger)
+    e.draw_mouth(smile=-6, width=14)
 
 
 def expr_surprised(e: Eyes):
@@ -187,7 +187,8 @@ def expr_square_angry(e, shape="balanced"):
     e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY, top_angle_right=s["eh"]//3, **s)
     e.draw_brow(EYE_L_CX, angle_deg=-12, offset_y=-17, length=22)
     e.draw_brow(EYE_R_CX, angle_deg=12,  offset_y=-17, length=22)
-    e.draw_mouth(smile=0, width=14)
+    # Tight mouth - upward curved (suppressed anger)
+    e.draw_mouth(smile=-6, width=14)
 
 def expr_square_surprised(e, shape="balanced"):
     s = _sq(shape)
@@ -293,7 +294,8 @@ def expr_oval_angry(e, shape="normal"):
     e.draw_oval_eye(EYE_R_CX, EYE_CY, top_angle_right=clip, **s)
     e.draw_brow(EYE_L_CX, angle_deg=-12, offset_y=-s["outer_ry"] - 4, length=24)
     e.draw_brow(EYE_R_CX, angle_deg=12,  offset_y=-s["outer_ry"] - 4, length=24)
-    e.draw_mouth(smile=0, width=14)
+    # Tight mouth - upward curved (suppressed anger)
+    e.draw_mouth(smile=-6, width=14)
 
 def expr_oval_surprised(e, shape="normal"):
     s = _ov(shape)
