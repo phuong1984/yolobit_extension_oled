@@ -150,3 +150,115 @@ Blockly.Python['robot_play_animation'] = function(block) {
   var code = 'play_animation(e, \'' + dropdown_anim + '\', times=' + number_times + ', speed=' + dropdown_speed + ')\n';
   return code;
 };
+
+/* ================================================================== *
+ *  4. SHOW SQUARE EXPRESSION (Style A — Rounded Rectangle)           *
+ * ================================================================== */
+
+const SQUARE_SHAPE_OPTIONS = [
+  ['⬜ Sharp (rx=4)',    'sharp'],
+  ['🔲 Balanced (rx=10)', 'balanced'],
+  ['🔘 Round (rx=14)',   'round'],
+  ['▬ Wide flat',        'wide'],
+];
+
+const SQUARE_EXPR_OPTIONS = [
+  ['😐 Normal',    'normal'],
+  ['😊 Happy',     'happy'],
+  ['😢 Sad',       'sad'],
+  ['😠 Angry',     'angry'],
+  ['😲 Surprised', 'surprised'],
+  ['😴 Sleepy',    'sleepy'],
+  ['😉 Wink',      'wink'],
+  ['😍 Love',      'love'],
+];
+
+Blockly.Blocks['robot_show_square'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_show_square",
+      "message0": "⬜ Square Eyes  Shape: %1  Face: %2",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "SHAPE",
+          "options": SQUARE_SHAPE_OPTIONS
+        },
+        {
+          "type": "field_dropdown",
+          "name": "EXPR",
+          "options": SQUARE_EXPR_OPTIONS
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#533AB7",
+      "tooltip": "Style A: Rounded rectangle eyes. Choose a shape and an expression.",
+      "helpUrl": ""
+    });
+  }
+};
+
+Blockly.Python['robot_show_square'] = function(block) {
+  Blockly.Python.definitions_['import_show_square'] =
+    'from expressions import show_square_expression';
+  var shape = block.getFieldValue('SHAPE');
+  var expr  = block.getFieldValue('EXPR');
+  return 'show_square_expression(e, shape=\'' + shape + '\', expr=\'' + expr + '\')\n';
+};
+
+/* ================================================================== *
+ *  5. SHOW OVAL EXPRESSION (Style B — Oggy Oval)                     *
+ * ================================================================== */
+
+const OVAL_SHAPE_OPTIONS = [
+  ['🔵 Normal oval',  'normal'],
+  ['🏈 Wide flat',    'wide'],
+  ['🥚 Tall oval',    'tall'],
+  ['👁 Big bubble',  'big'],
+];
+
+const OVAL_EXPR_OPTIONS = [
+  ['😐 Normal',    'normal'],
+  ['😊 Happy',     'happy'],
+  ['😢 Sad',       'sad'],
+  ['😠 Angry',     'angry'],
+  ['😲 Surprised', 'surprised'],
+  ['😴 Sleepy',    'sleepy'],
+  ['😉 Wink',      'wink'],
+  ['😍 Love',      'love'],
+];
+
+Blockly.Blocks['robot_show_oval'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_show_oval",
+      "message0": "👁 Oval Eyes  Shape: %1  Face: %2",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "SHAPE",
+          "options": OVAL_SHAPE_OPTIONS
+        },
+        {
+          "type": "field_dropdown",
+          "name": "EXPR",
+          "options": OVAL_EXPR_OPTIONS
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#0F6E56",
+      "tooltip": "Style B: Oggy-style oval eyes. Choose a shape and an expression.",
+      "helpUrl": ""
+    });
+  }
+};
+
+Blockly.Python['robot_show_oval'] = function(block) {
+  Blockly.Python.definitions_['import_show_oval'] =
+    'from expressions import show_oval_expression';
+  var shape = block.getFieldValue('SHAPE');
+  var expr  = block.getFieldValue('EXPR');
+  return 'show_oval_expression(e, shape=\'' + shape + '\', expr=\'' + expr + '\')\n';
+};

@@ -176,6 +176,194 @@ class Eyes:
             self.draw_arc(cx, y_offset - smile, width // 2, 200, 340, 1, 2)
 
     # ------------------------------------------------------------------ #
+    #  Style A — Rounded Rectangle eye                                    #
+    # ------------------------------------------------------------------ #
+
+    def draw_rounded_rect_eye(self, cx, cy,
+                               ew=28, eh=28, rx=10,
+                               pupil_dx=0, pupil_dy=0,
+                               top_clip=0, bot_clip=0,
+                               closed=False, half_open=False,
+                               top_angle_left=0, top_angle_right=0):
+        """
+        Draw a single rounded-rectangle eye (Style A).
+        cx, cy           : center
+        ew, eh           : total width/height of the rect
+        rx               : corner radius (4=sharp, 10=balanced, eh//2=pill)
+        pupil_dx/dy      : pupil offset
+        top_clip         : uniform top clip (sleepy/angry horizontal mask)
+        bot_clip         : bottom clip
+        closed           : horizontal line (blink/wink)
+        half_open        : only lower half visible (sleepy)
+        top_angle_left   : extra clip at top-left corner (angry left eye)
+        top_angle_right  : extra clip at top-right corner (angry right eye)
+        """
+        x0 = cx - ew // 2
+        y0 = cy - eh // 2
+
+        if closed:
+            self.oled.hline(x0, cy, ew, 1)
+            self.oled.hline(x0, cy + 1, ew, 1)
+            return
+
+        # Draw filled rounded rect using horizontal scan
+        for row in range(eh):
+            y = y0 + row
+            dy = row  # distance from top
+
+            # Compute horizontal extent for this row considering corner radius
+            if dy < rx:
+                # Top corners — inset based on circle formula
+                inset = int(rx - math.sqrt(max(0, rx*rx - (rx - dy)**2)))
+            elif dy >= eh - rx:
+                # Bottom corners
+                ddy = dy - (eh - rx - 1)
+                inset = int(rx - math.sqrt(max(0, rx*rx - ddy*ddy)))
+            else:
+                inset = 0
+
+            x_start = x0 + inset
+            x_end   = x0 + ew - inset
+            w = x_end - x_start
+            if w > 0 and 0 <= y < SCREEN_H:
+                self.oled.hline(x_start, y, w, 1)
+
+        # half_open: mask out top half
+        if half_open:
+            self.oled.fill_rect(x0 - 1, y0 - 1, ew + 2, eh // 2 + 1, 0)
+            self.oled.hline(x0, cy, ew, 1)
+            # Pupil in lower half
+            self.draw_filled_ellipse(cx + pupil_dx, cy + eh // 4 + pupil_dy,
+                                     PUPIL_R - 2, PUPIL_R - 1, 0)
+            self.oled.pixel(cx + pupil_dx + 2, cy + eh // 4 + pupil_dy - 2, 1)
+            return
+
+        # top_clip: horizontal mask from top
+        if top_clip > 0:
+            self.oled.fill_rect(x0 - 1, y0 - 1, ew + 2, top_clip + 1, 0)
+
+        # bot_clip
+        if bot_clip > 0:
+            self.oled.fill_rect(x0 - 1, y0 + eh - bot_clip, ew + 2, bot_clip + 2, 0)
+
+        # Angled top-left clip (angry left eye: inner brow pushes down)
+        if top_angle_left > 0:
+            for col in range(ew):
+                clip_h = int(top_angle_left * (ew - col) / ew)
+                if clip_h > 0:
+                    self.oled.vline(x0 + col, y0, clip_h, 0)
+
+        # Angled top-right clip (angry right eye)
+        if top_angle_right > 0:
+            for col in range(ew):
+                clip_h = int(top_angle_right * col / ew)
+                if clip_h > 0:
+                    self.oled.vline(x0 + col, y0, clip_h, 0)
+
+        # Pupil
+        px = cx + pupil_dx
+        py = cy + pupil_dy
+        self.draw_filled_ellipse(px, py, PUPIL_R, PUPIL_R + 1, 0)
+        if 0 <= px + 2 < SCREEN_W and 0 <= py - 2 < SCREEN_H:
+            self.oled.pixel(px + 2, py - 2, 1)
+
+    def draw_both_rounded_rect_eyes(self, **kwargs):
+        """Draw both rounded-rect eyes with the same parameters."""
+        self.draw_rounded_rect_eye(EYE_L_CX, EYE_CY, **kwargs)
+        self.draw_rounded_rect_eye(EYE_R_CX, EYE_CY, **kwargs)
+
+    # ------------------------------------------------------------------ #
+    #  Style B — Oggy Oval eye                                            #
+    # ------------------------------------------------------------------ #
+
+    def draw_oval_eye(self, cx, cy,
+                      outer_rx=26, outer_ry=20,
+                      inner_rx=16, inner_ry=14,
+                      pupil_dx=0, pupil_dy=0,
+                      top_clip=0, bot_clip=0,
+                      closed=False, half_open=False,
+                      top_angle_left=0, top_angle_right=0):
+        """
+        Draw a single Oggy-style oval eye (Style B).
+        Outer ellipse = dark border/frame.
+        Inner ellipse = white eyeball.
+        cx, cy             : center
+        outer_rx/ry        : outer dark ellipse radii
+        inner_rx/ry        : inner white ellipse radii
+        pupil_dx/dy        : pupil offset
+        top_clip           : pixels masked from top (sleepy/angry)
+        bot_clip           : pixels masked from bottom
+        closed             : arc line (wink)
+        half_open          : sleepy — only lower portion visible
+        top_angle_left/right : angled top mask for angry expression
+        """
+        if closed:
+            # Draw a curved arc line instead of filled eye
+            self.draw_arc(cx, cy, outer_rx - 2, 190, 350, 1, 3)
+            return
+
+        # Draw outer dark ellipse
+        self.draw_filled_ellipse(cx, cy, outer_rx, outer_ry, 1)
+
+        # half_open: mask top half of outer ellipse
+        if half_open:
+            self.oled.fill_rect(cx - outer_rx - 1, cy - outer_ry - 1,
+                                 outer_rx * 2 + 2, outer_ry + 1, 0)
+            self.oled.hline(cx - outer_rx, cy, outer_rx * 2, 1)
+            # Inner white (lower half only)
+            for dy in range(0, inner_ry + 1):
+                frac = 1 - (dy / inner_ry) ** 2 if inner_ry > 0 else 0
+                dx = int(inner_rx * math.sqrt(max(0, frac)))
+                self.oled.hline(cx - dx, cy + dy, dx * 2 + 1, 1)
+            # Pupil in lower area
+            self.draw_filled_ellipse(cx + pupil_dx, cy + inner_ry // 2 + pupil_dy,
+                                     PUPIL_R - 1, PUPIL_R, 0)
+            self.oled.pixel(cx + pupil_dx + 2, cy + inner_ry // 2 + pupil_dy - 2, 1)
+            return
+
+        # Draw inner white ellipse
+        self.draw_filled_ellipse(cx, cy, inner_rx, inner_ry, 1)
+
+        # Clips applied AFTER drawing (mask with black)
+        if top_clip > 0:
+            self.oled.fill_rect(cx - outer_rx - 1, cy - outer_ry - 1,
+                                 outer_rx * 2 + 2, top_clip + 1, 0)
+
+        if bot_clip > 0:
+            self.oled.fill_rect(cx - outer_rx - 1, cy + outer_ry - bot_clip,
+                                 outer_rx * 2 + 2, bot_clip + 2, 0)
+
+        # Angled top-left clip (angry left eye)
+        if top_angle_left > 0:
+            w = outer_rx * 2
+            x0 = cx - outer_rx
+            for col in range(w):
+                clip_h = int(top_angle_left * (w - col) / w)
+                if clip_h > 0:
+                    self.oled.vline(x0 + col, cy - outer_ry - 1, clip_h + 1, 0)
+
+        # Angled top-right clip (angry right eye)
+        if top_angle_right > 0:
+            w = outer_rx * 2
+            x0 = cx - outer_rx
+            for col in range(w):
+                clip_h = int(top_angle_right * col / w)
+                if clip_h > 0:
+                    self.oled.vline(x0 + col, cy - outer_ry - 1, clip_h + 1, 0)
+
+        # Pupil
+        px = cx + pupil_dx
+        py = cy + pupil_dy
+        self.draw_filled_ellipse(px, py, PUPIL_R, PUPIL_R + 2, 0)
+        if 0 <= px + 2 < SCREEN_W and 0 <= py - 2 < SCREEN_H:
+            self.oled.pixel(px + 2, py - 2, 1)
+
+    def draw_both_oval_eyes(self, **kwargs):
+        """Draw both Oggy oval eyes with the same parameters."""
+        self.draw_oval_eye(EYE_L_CX, EYE_CY, **kwargs)
+        self.draw_oval_eye(EYE_R_CX, EYE_CY, **kwargs)
+
+    # ------------------------------------------------------------------ #
     #  Render helpers                                                      #
     # ------------------------------------------------------------------ #
 

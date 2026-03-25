@@ -9,5 +9,13 @@
       <field name="TIMES">1</field>
       <field name="SPEED">1.0</field>
     </block>
+    <block type="robot_show_square">
+      <field name="SHAPE">balanced</field>
+      <field name="EXPR">normal</field>
+    </block>
+    <block type="robot_show_oval">
+      <field name="SHAPE">normal</field>
+      <field name="EXPR">normal</field>
+    </block>
   </category>
 </xml>
