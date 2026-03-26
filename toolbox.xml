@@ -9,6 +9,13 @@
       <field name="SHAPE">normal</field>
       <field name="EXPR">normal</field>
     </block>
+    <block type="robot_show_custom">
+      <field name="EXPR">normal</field>
+      <field name="EW">28</field>
+      <field name="EH">28</field>
+      <field name="RX">6</field>
+      <field name="PUPIL">medium</field>
+    </block>
     <label text="⚠️ Blocking animation (run until done)"/>
     <block type="robot_play_animation">
       <field name="ANIM">blink</field>

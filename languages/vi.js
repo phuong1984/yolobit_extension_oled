@@ -4,15 +4,15 @@
 // ==================================================================
 // ROBOT SETUP BLOCK
 // ==================================================================
-Blockly.Msg.ROBOT_EYES_SETUP_MESSAGE = "🤖 Cài đặt Robot Eyes"
-Blockly.Msg.ROBOT_EYES_SETUP_TOOLTIP = "Khởi tạo màn hình OLED"
+Blockly.Msg.ROBOT_EYES_SETUP_MESSAGE = "🤖 Khởi tạo Robot Eyes"
+Blockly.Msg.ROBOT_EYES_SETUP_TOOLTIP = "Khởi tạo Robot Eyes trên màn hình OLED"
 Blockly.Msg.ROBOT_EYES_SETUP_HELPURL = ""
 
 // ==================================================================
 // PLAY ANIMATION BLOCK (BLOCKING)
 // ==================================================================
 Blockly.Msg.ROBOT_PLAY_ANIMATION_MESSAGE = "✨ Chạy %1 Số lần: %2 Tốc độ: %3"
-Blockly.Msg.ROBOT_PLAY_ANIMATION_TOOLTIP = "CHẶN: Chạy animation và ĐỢI cho đến khi hoàn thành trước khi tiếp tục. Dùng cho các chuỗi đơn giản. KHÔNG dùng trong vòng lặp 'while True'. CPU bị chặn trong quá trình animation."
+Blockly.Msg.ROBOT_PLAY_ANIMATION_TOOLTIP = "CHẶN: Chạy diễn hoạt và ĐỢI cho đến khi hoàn thành trước khi tiếp tục. Dùng cho các chuỗi đơn giản. KHÔNG dùng trong vòng lặp 'while True'. CPU bị chặn trong quá trình diễn hoạt."
 Blockly.Msg.ROBOT_PLAY_ANIMATION_HELPURL = ""
 
 // Animation dropdown options
@@ -32,22 +32,22 @@ Blockly.Msg.SPEED_SLOW = "Chậm (0.5×)"
 // ==================================================================
 // CREATE ANIMATION BLOCK (NON-BLOCKING)
 // ==================================================================
-Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_MESSAGE = "✨ Tạo Animation (không chặn) %1"
-Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_TOOLTIP = "KHÔNG CHẶN: Dùng trong vòng lặp 'while True'. Tạo đối tượng animation. Gọi khối update mỗi khung hình. Tốc độ animation phụ thuộc vào time.sleep_ms() trong vòng lặp của bạn (ví dụ: 16ms=nhanh, 100ms=chậm)."
+Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_MESSAGE = "✨ Tạo diễn hoạt (không chặn) %1"
+Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_TOOLTIP = "KHÔNG CHẶN: Dùng trong vòng lặp 'while True'. Tạo đối tượng diễn hoạt. Gọi khối cập nhật mỗi khung hình. Tốc độ diễn hoạt phụ thuộc vào time.sleep_ms() trong vòng lặp của bạn (ví dụ: 16ms=nhanh, 100ms=chậm)."
 Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_HELPURL = ""
 
 // ==================================================================
 // UPDATE ANIMATION BLOCK (NON-BLOCKING)
 // ==================================================================
-Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_MESSAGE = "🔄 Cập nhật Animation (không chặn)"
-Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_TOOLTIP = "Cập nhật một khung hình của animation. Dùng trong vòng lặp 'while True' sau khi tạo animation. Trả về True nếu animation vẫn đang chạy."
+Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_MESSAGE = "🔄 Cập nhật diễn hoạt (không chặn)"
+Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_TOOLTIP = "Cập nhật một khung hình của diễn hoạt. Dùng trong vòng lặp 'while True' sau khi tạo diễn hoạt. Trả về True nếu diễn hoạt vẫn đang chạy."
 Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_HELPURL = ""
 
 // ==================================================================
 // SHOW SQUARE EXPRESSION BLOCK
 // ==================================================================
-Blockly.Msg.ROBOT_SHOW_SQUARE_MESSAGE = "⬜ Mắt vuông  Hình dạng: %1  Biểu cảm: %2"
-Blockly.Msg.ROBOT_SHOW_SQUARE_TOOLTIP = "Kiểu A: Mắt hình chữ nhật bo tròn. Chọn hình dạng và biểu cảm."
+Blockly.Msg.ROBOT_SHOW_SQUARE_MESSAGE = "⬜ Mắt vuông  Dạng nền: %1  Biểu cảm: %2"
+Blockly.Msg.ROBOT_SHOW_SQUARE_TOOLTIP = "Kiểu A: Mắt hình chữ nhật bo tròn. Chọn hình dạng nền và biểu cảm."
 Blockly.Msg.ROBOT_SHOW_SQUARE_HELPURL = ""
 
 // Square shape dropdown options
@@ -59,8 +59,8 @@ Blockly.Msg.SQUARE_SHAPE_WIDE = "▬ Phẳng rộng"
 // ==================================================================
 // SHOW OVAL EXPRESSION BLOCK
 // ==================================================================
-Blockly.Msg.ROBOT_SHOW_OVAL_MESSAGE = "👁 Mắt oval  Hình dạng: %1  Biểu cảm: %2"
-Blockly.Msg.ROBOT_SHOW_OVAL_TOOLTIP = "Kiểu B: Mắt oval phong cách Oggy. Chọn hình dạng và biểu cảm."
+Blockly.Msg.ROBOT_SHOW_OVAL_MESSAGE = "👁 Mắt oval  Dạng nền: %1  Biểu cảm: %2"
+Blockly.Msg.ROBOT_SHOW_OVAL_TOOLTIP = "Kiểu B: Mắt oval phong cách Oggy. Chọn hình dạng nền và biểu cảm."
 Blockly.Msg.ROBOT_SHOW_OVAL_HELPURL = ""
 
 // Oval shape dropdown options
@@ -79,7 +79,24 @@ Blockly.Msg.EXPR_ANGRY = "😠 Giận dữ"
 Blockly.Msg.EXPR_SURPRISED = "😲 Ngạc nhiên"
 Blockly.Msg.EXPR_SLEEPY = "😴 Buồn ngủ"
 Blockly.Msg.EXPR_WINK = "😉 Nháy mắt"
-Blockly.Msg.EXPR_LOVE = "😍 Yêu thích"
+Blockly.Msg.EXPR_LOVE = "😍 Đang yêu"
 Blockly.Msg.EXPR_LOOK_LEFT = "👀 Nhìn trái"
 Blockly.Msg.EXPR_LOOK_RIGHT = "👀 Nhìn phải"
 
+// ==================================================================
+// Custom expression block
+// ==================================================================
+Blockly.Msg.ROBOT_SHOW_CUSTOM_MESSAGE =
+    "Mắt tùy chỉnh  Biểu cảm: %1  Chiều rộng mắt: %2 px  Chiều cao mắt: %3 px  Bán kính góc: %4 px  Con ngươi: %5";
+
+Blockly.Msg.PUPIL_SMALL  = "nhỏ";
+Blockly.Msg.PUPIL_MEDIUM = "vừa";
+Blockly.Msg.PUPIL_LARGE  = "to";
+
+Blockly.Msg.ROBOT_SHOW_CUSTOM_TOOLTIP =
+    "Hiển thị biểu cảm với hình dạng mắt tùy chỉnh. " +
+    "Chiều rộng: 10–56 px, Chiều cao: 10–40 px, " +
+    "Bo góc: 0 (sắc cạnh) đến min(w,h)/2 (hình viên thuốc). " +
+    "Bán kính bo góc tự động giới hạn nếu nhập quá lớn. " +
+    "Kích thước con ngươi tự động điều chỉnh theo chiều rộng mắt.";
+Blockly.Msg.ROBOT_SHOW_CUSTOM_HELPURL = "";

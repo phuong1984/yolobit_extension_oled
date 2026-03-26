@@ -151,7 +151,18 @@ class Eyes:
             self.oled.hline(cx - rx, cy, ew, 1)
             # Pupil in lower half
             self.draw_filled_ellipse(cx + pupil_dx, cy + ry // 2 + pupil_dy, PUPIL_R - 2, PUPIL_R - 1, 0)
-            self.oled.pixel(cx + pupil_dx + 2, cy + ry // 2 + pupil_dy - 2, 1)
+            # Highlight region (cross shape, 5 pixels)
+            hx, hy = cx + pupil_dx + 2, cy + ry // 2 + pupil_dy - 2
+            if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+                self.oled.pixel(hx, hy, 1)
+                if 0 <= hx + 1 < SCREEN_W:
+                    self.oled.pixel(hx + 1, hy, 1)
+                if 0 <= hy - 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy - 1, 1)
+                if 0 <= hx - 1 < SCREEN_W:
+                    self.oled.pixel(hx - 1, hy, 1)
+                if 0 <= hy + 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy + 1, 1)
             return
 
         # Full eye white
@@ -170,9 +181,18 @@ class Eyes:
         py = cy + pupil_dy
         self.draw_filled_ellipse(px, py, PUPIL_R, PUPIL_R + 1, 0)
 
-        # Pupil highlight (white dot)
-        if 0 <= px + 2 < SCREEN_W and 0 <= py - 2 < SCREEN_H:
-            self.oled.pixel(px + 2, py - 2, 1)
+        # Pupil highlight (bright region - cross shape, 5 pixels inside pupil)
+        hx, hy = px + 2, py - 2  # highlight center offset
+        if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+            self.oled.pixel(hx, hy, 1)  # center
+            if 0 <= hx + 1 < SCREEN_W:
+                self.oled.pixel(hx + 1, hy, 1)  # right
+            if 0 <= hy - 1 < SCREEN_H:
+                self.oled.pixel(hx, hy - 1, 1)  # top
+            if 0 <= hx - 1 < SCREEN_W:
+                self.oled.pixel(hx - 1, hy, 1)  # left
+            if 0 <= hy + 1 < SCREEN_H:
+                self.oled.pixel(hx, hy + 1, 1)  # bottom
 
     def draw_both_eyes(self, **kwargs):
         """Draw both eyes with same parameters."""
@@ -219,7 +239,8 @@ class Eyes:
                                pupil_dx=0, pupil_dy=0,
                                top_clip=0, bot_clip=0,
                                closed=False, half_open=False,
-                               top_angle_left=0, top_angle_right=0):
+                               top_angle_left=0, top_angle_right=0,
+                               pupil_r=None):
         """
         Draw a single rounded-rectangle eye (Style A).
         cx, cy           : center
@@ -232,6 +253,7 @@ class Eyes:
         half_open        : only lower half visible (sleepy)
         top_angle_left   : extra clip at top-left corner (angry left eye)
         top_angle_right  : extra clip at top-right corner (angry right eye)
+        pupil_r          : override pupil radius (None = use global PUPIL_R=6)
         """
         x0 = cx - ew // 2
         y0 = cy - eh // 2
@@ -263,14 +285,28 @@ class Eyes:
             if w > 0 and 0 <= y < SCREEN_H:
                 self.oled.hline(x_start, y, w, 1)
 
+        # Resolve pupil radius: caller override or global default
+        _pr = pupil_r if pupil_r is not None else PUPIL_R
+
         # half_open: mask out top half
         if half_open:
             self.oled.fill_rect(x0 - 1, y0 - 1, ew + 2, eh // 2 + 1, 0)
             self.oled.hline(x0, cy, ew, 1)
             # Pupil in lower half
             self.draw_filled_ellipse(cx + pupil_dx, cy + eh // 4 + pupil_dy,
-                                     PUPIL_R - 2, PUPIL_R - 1, 0)
-            self.oled.pixel(cx + pupil_dx + 2, cy + eh // 4 + pupil_dy - 2, 1)
+                                     max(1, _pr - 2), max(1, _pr - 1), 0)
+            # Highlight region (cross shape, 5 pixels)
+            hx, hy = cx + pupil_dx + 2, cy + eh // 4 + pupil_dy - 2
+            if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+                self.oled.pixel(hx, hy, 1)
+                if 0 <= hx + 1 < SCREEN_W:
+                    self.oled.pixel(hx + 1, hy, 1)
+                if 0 <= hy - 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy - 1, 1)
+                if 0 <= hx - 1 < SCREEN_W:
+                    self.oled.pixel(hx - 1, hy, 1)
+                if 0 <= hy + 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy + 1, 1)
             return
 
         # top_clip: horizontal mask from top
@@ -295,12 +331,23 @@ class Eyes:
                 if clip_h > 0:
                     self.oled.vline(x0 + col, y0, clip_h, 0)
 
-        # Pupil
+        # Pupil - use _pr (from pupil_r param or default PUPIL_R)
         px = cx + pupil_dx
         py = cy + pupil_dy
-        self.draw_filled_ellipse(px, py, PUPIL_R, PUPIL_R + 1, 0)
-        if 0 <= px + 2 < SCREEN_W and 0 <= py - 2 < SCREEN_H:
-            self.oled.pixel(px + 2, py - 2, 1)
+        self.draw_filled_ellipse(px, py, _pr, _pr + 1, 0)
+
+        # Pupil highlight (bright region - cross shape, 5 pixels inside pupil)
+        hx, hy = px + 2, py - 2  # highlight center offset
+        if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+            self.oled.pixel(hx, hy, 1)  # center
+            if 0 <= hx + 1 < SCREEN_W:
+                self.oled.pixel(hx + 1, hy, 1)  # right
+            if 0 <= hy - 1 < SCREEN_H:
+                self.oled.pixel(hx, hy - 1, 1)  # top
+            if 0 <= hx - 1 < SCREEN_W:
+                self.oled.pixel(hx - 1, hy, 1)  # left
+            if 0 <= hy + 1 < SCREEN_H:
+                self.oled.pixel(hx, hy + 1, 1)  # bottom
 
     def draw_both_rounded_rect_eyes(self, **kwargs):
         """Draw both rounded-rect eyes with the same parameters."""
@@ -353,7 +400,18 @@ class Eyes:
             # Pupil in lower area
             self.draw_filled_ellipse(cx + pupil_dx, cy + inner_ry // 2 + pupil_dy,
                                      PUPIL_R - 1, PUPIL_R, 0)
-            self.oled.pixel(cx + pupil_dx + 2, cy + inner_ry // 2 + pupil_dy - 2, 1)
+            # Highlight region (cross shape, 5 pixels)
+            hx, hy = cx + pupil_dx + 2, cy + inner_ry // 2 + pupil_dy - 2
+            if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+                self.oled.pixel(hx, hy, 1)
+                if 0 <= hx + 1 < SCREEN_W:
+                    self.oled.pixel(hx + 1, hy, 1)
+                if 0 <= hy - 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy - 1, 1)
+                if 0 <= hx - 1 < SCREEN_W:
+                    self.oled.pixel(hx - 1, hy, 1)
+                if 0 <= hy + 1 < SCREEN_H:
+                    self.oled.pixel(hx, hy + 1, 1)
             return
 
         # Draw inner white ellipse
@@ -390,8 +448,18 @@ class Eyes:
         px = cx + pupil_dx
         py = cy + pupil_dy
         self.draw_filled_ellipse(px, py, PUPIL_R, PUPIL_R + 2, 0)
-        if 0 <= px + 2 < SCREEN_W and 0 <= py - 2 < SCREEN_H:
-            self.oled.pixel(px + 2, py - 2, 1)
+        # Highlight region (cross shape, 5 pixels)
+        hx, hy = px + 2, py - 2
+        if 0 <= hx < SCREEN_W and 0 <= hy < SCREEN_H:
+            self.oled.pixel(hx, hy, 1)  # center
+            if 0 <= hx + 1 < SCREEN_W:
+                self.oled.pixel(hx + 1, hy, 1)  # right
+            if 0 <= hy - 1 < SCREEN_H:
+                self.oled.pixel(hx, hy - 1, 1)  # top
+            if 0 <= hx - 1 < SCREEN_W:
+                self.oled.pixel(hx - 1, hy, 1)  # left
+            if 0 <= hy + 1 < SCREEN_H:
+                self.oled.pixel(hx, hy + 1, 1)  # bottom
 
     def draw_both_oval_eyes(self, **kwargs):
         """Draw both Oggy oval eyes with the same parameters."""

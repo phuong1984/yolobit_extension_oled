@@ -4,7 +4,7 @@
 // ==================================================================
 // ROBOT SETUP BLOCK
 // ==================================================================
-Blockly.Msg.ROBOT_EYES_SETUP_MESSAGE = "🤖 Robot Eyes Setup"
+Blockly.Msg.ROBOT_EYES_SETUP_MESSAGE = "🤖 Robot Eyes Init"
 Blockly.Msg.ROBOT_EYES_SETUP_TOOLTIP = "Initialize the OLED display"
 Blockly.Msg.ROBOT_EYES_SETUP_HELPURL = ""
 
@@ -83,4 +83,22 @@ Blockly.Msg.EXPR_LOVE = "😍 Love"
 Blockly.Msg.EXPR_LOOK_LEFT = "👀 Look Left"
 Blockly.Msg.EXPR_LOOK_RIGHT = "👀 Look Right"
 
+// ==================================================================
+// Custom expression block
+// ==================================================================
+Blockly.Msg.ROBOT_SHOW_CUSTOM_MESSAGE =
+    "Custom eyes  Face: %1  Eye width: %2 px  Eye height: %3 px  Corner radius: %4 px  Pupil: %5";
 
+// --- Dropdown: pupil size ---
+Blockly.Msg.PUPIL_SMALL  = "small";
+Blockly.Msg.PUPIL_MEDIUM = "medium";
+Blockly.Msg.PUPIL_LARGE  = "large";
+
+// --- Tooltip & helpURL ---
+Blockly.Msg.ROBOT_SHOW_CUSTOM_TOOLTIP =
+    "Display a facial expression with custom eye shape. " +
+    "Width: 10–56 px, Height: 10–40 px, " +
+    "Corner radius: 0 (sharp) to min(w,h)/2 (pill shape). " +
+    "The corner radius is automatically clamped if too large. " +
+    "Pupil size scales with the eye width.";
+Blockly.Msg.ROBOT_SHOW_CUSTOM_HELPURL = "";

@@ -96,10 +96,10 @@ Blockly.Python['robot_setup'] = function(block) {
   Blockly.Python.definitions_['import_eyes'] = 'from eyes import Eyes';
   Blockly.Python.definitions_['import_expressions'] = 'from expressions import show_expression';
   Blockly.Python.definitions_['import_animations'] = 'from animations import play_animation';
+  Blockly.Python.definitions_['import_show_custom'] = 'from expressions import show_custom_expression';
   Blockly.Python.definitions_['import_time'] = 'import time';
 
   var code = 'e = Eyes(scl_pin=Pin(pin19.pin), sda_pin=Pin(pin20.pin))\n';
-  code += 'show_expression(e, \'normal\')  # Show normal expression by default\n';
   return code;
 };
 
@@ -289,4 +289,89 @@ Blockly.Python['robot_show_oval'] = function(block) {
   var shape = block.getFieldValue('SHAPE');
   var expr = block.getFieldValue('EXPR');
   return 'show_oval_expression(e, shape=\'' + shape + '\', expr=\'' + expr + '\')\n';
+};
+
+
+/* ================================================================== *
+ *  DROPDOWN OPTIONS — PUPIL SIZE                                      *
+ * ================================================================== */
+const PUPIL_SIZE_OPTIONS = [
+  [Blockly.Msg.PUPIL_SMALL,  'small'],
+  [Blockly.Msg.PUPIL_MEDIUM, 'medium'],
+  [Blockly.Msg.PUPIL_LARGE,  'large'],
+];
+
+/* ================================================================== *
+ *  7. SHOW CUSTOM EXPRESSION                                          *
+ * ================================================================== */
+Blockly.Blocks['robot_show_custom'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_show_custom",
+      "message0": Blockly.Msg.ROBOT_SHOW_CUSTOM_MESSAGE,
+      // Blockly.Msg.ROBOT_SHOW_CUSTOM_MESSAGE nên là chuỗi như:
+      // "Hiển thị biểu cảm %1 mắt rộng %2 px cao %3 px bo góc %4 px con ngươi %5"
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "EXPR",
+          "options": EXPR_OPTIONS   // tái dùng từ block square/oval
+        },
+        {
+          "type": "field_number",
+          "name": "EW",
+          "value": 28,
+          "min": 10,
+          "max": 56,
+          "precision": 1
+        },
+        {
+          "type": "field_number",
+          "name": "EH",
+          "value": 28,
+          "min": 10,
+          "max": 40,
+          "precision": 1
+        },
+        {
+          "type": "field_number",
+          "name": "RX",
+          "value": 6,
+          "min": 0,
+          "max": 20,   // Blockly cap — Python sẽ clamp thêm về min(ew,eh)//2
+          "precision": 1
+        },
+        {
+          "type": "field_dropdown",
+          "name": "PUPIL",
+          "options": PUPIL_SIZE_OPTIONS
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#7C4EBF",   // màu tím nhạt — phân biệt với square (#533AB7) và oval (#0F6E56)
+      "tooltip": Blockly.Msg.ROBOT_SHOW_CUSTOM_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_SHOW_CUSTOM_HELPURL
+    });
+  }
+};
+
+Blockly.Python['robot_show_custom'] = function(block) {
+  Blockly.Python.definitions_['import_show_custom'] = 'from expressions import show_custom_expression';
+
+  var expr   = block.getFieldValue('EXPR');
+  var ew     = block.getFieldValue('EW');
+  var eh     = block.getFieldValue('EH');
+  var rx     = block.getFieldValue('RX');
+  var pupil  = block.getFieldValue('PUPIL');
+
+  // Blockly number fields trả về string — ép kiểu int để an toàn
+  var code =
+      'show_custom_expression(e, ' +
+      'expr=\'' + expr   + '\', ' +
+      'ew='     + parseInt(ew)    + ', ' +
+      'eh='     + parseInt(eh)    + ', ' +
+      'rx='     + parseInt(rx)    + ', ' +
+      'pupil=\''+ pupil  + '\')\n';
+  return code;
 };

@@ -383,6 +383,191 @@ def show_oval_expression(eyes, shape="normal", expr="normal"):
 
 
 # ================================================================== #
+#  STYLE C — CUSTOM SHAPE EXPRESSIONS                                 #
+#  Người dùng tự nhập: ew, eh, rx, và kích thước con ngươi           #
+#                                                                      #
+#  Giới hạn an toàn (màn hình 128x64):                                #
+#    ew : 10 – 56 px  (2 mắt tại x=32/96, gap tối thiểu 4px/bên)    #
+#    eh : 10 – 40 px  (tâm y=32, miệng y=52, buffer 8px)             #
+#    rx : 0 – min(ew,eh)//2  (tự động clamp)                         #
+# ================================================================== #
+
+CUSTOM_EW_MIN = 10
+CUSTOM_EW_MAX = 56
+CUSTOM_EH_MIN = 10
+CUSTOM_EH_MAX = 40
+
+
+def _validate_custom_params(ew, eh, rx):
+    """Clamp ew/eh/rx về vùng an toàn, trả về (ew, eh, rx) đã hợp lệ."""
+    ew = max(CUSTOM_EW_MIN, min(CUSTOM_EW_MAX, int(ew)))
+    eh = max(CUSTOM_EH_MIN, min(CUSTOM_EH_MAX, int(eh)))
+    rx_max = min(ew, eh) // 2
+    rx = max(0, min(rx_max, int(rx)))
+    return ew, eh, rx
+
+
+def _pupil_r_for(es, pupil_size="medium"):
+    """
+    Tính bán kính con ngươi theo chiều rộng mắt và lựa chọn người dùng.
+    Công thức tỷ lệ với ew, có floor để không bị mất khi mắt nhỏ.
+    """
+    if pupil_size == "small":
+        return max(4, es // 5)
+    elif pupil_size == "large":
+        return max(6, es // 3)
+    else:  # "medium"
+        return max(5, es // 4)
+
+
+def expr_custom_normal(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    e.draw_both_rounded_rect_eyes(ew=ew, eh=eh, rx=rx, pupil_r=pr)
+    e.draw_mouth(smile=0, width=18)
+
+
+def expr_custom_happy(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    # Happy: xoá nửa trên mắt tạo hiệu ứng mắt cười — con ngươi không hiển thị
+    for cx in (EYE_L_CX, EYE_R_CX):
+        e.draw_rounded_rect_eye(cx, EYE_CY, ew=ew, eh=eh, rx=rx)
+        e.clip_rect(cx - ew // 2 - 1, EYE_CY - eh // 2 - 1,
+                    ew + 2, eh // 2, 0)
+        e.draw_arc(cx, EYE_CY + 2, ew // 2 - 1, 190, 350, 1, 2)
+    e.draw_mouth(smile=8, width=28)
+
+
+def expr_custom_sad(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    top_clip = max(2, eh // 4)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx,
+                             top_angle_right=top_clip, pupil_r=pr)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx,
+                             top_angle_left=top_clip, pupil_r=pr)
+    brow_offset = -(eh // 2 + 5)
+    e.draw_brow(EYE_L_CX, angle_deg=18,  offset_y=brow_offset, length=22)
+    e.draw_brow(EYE_R_CX, angle_deg=-18, offset_y=brow_offset, length=22)
+    e.draw_mouth(smile=-6, width=22)
+
+
+def expr_custom_angry(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    top_clip = max(2, eh // 3)
+    pupil_down = max(2, eh // 8)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx,
+                             top_angle_left=top_clip,
+                             pupil_dy=pupil_down, pupil_r=pr)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx,
+                             top_angle_right=top_clip,
+                             pupil_dy=pupil_down, pupil_r=pr)
+    brow_offset = -(eh // 2 + 5)
+    e.draw_brow(EYE_L_CX, angle_deg=-12, offset_y=brow_offset, length=22)
+    e.draw_brow(EYE_R_CX, angle_deg=12,  offset_y=brow_offset, length=22)
+    e.draw_mouth(smile=-6, width=14)
+
+
+def expr_custom_surprised(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    ew2 = min(CUSTOM_EW_MAX, ew + 6)
+    eh2 = min(CUSTOM_EH_MAX, eh + 8)
+    e.draw_both_rounded_rect_eyes(ew=ew2, eh=eh2, rx=rx, pupil_r=pr)
+    e.draw_arc(64, 56, 7, 0, 360, 1, 2)
+
+
+def expr_custom_sleepy(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx, half_open=True, pupil_r=pr)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx, half_open=True, pupil_r=pr)
+    for i, (zx, zy) in enumerate([(100, 8), (106, 5), (112, 2)]):
+        sz = 2 + i
+        e.oled.hline(zx,      zy,      sz, 1)
+        e.oled.line( zx + sz, zy,      zx,      zy + sz, 1)
+        e.oled.hline(zx,      zy + sz, sz, 1)
+
+
+def expr_custom_wink(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    e.draw_rounded_rect_eye(EYE_L_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx, pupil_r=pr)
+    e.draw_rounded_rect_eye(EYE_R_CX, EYE_CY,
+                             ew=ew, eh=eh, rx=rx, closed=True)
+    e.draw_mouth(smile=4, width=20)
+
+
+def expr_custom_love(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    # Love: trái tim thay con ngươi — không cần pupil_r
+    for cx in (EYE_L_CX, EYE_R_CX):
+        e.draw_rounded_rect_eye(cx, EYE_CY, ew=ew, eh=eh, rx=rx)
+        e.clip_rect(cx - ew // 2 + 2, EYE_CY - eh // 2 + 2,
+                    ew - 4, eh - 4, 0)
+        _draw_heart(e, cx, EYE_CY, size=max(6, min(ew, eh) - 6))
+    e.draw_mouth(smile=10, width=26)
+
+
+def expr_custom_look_left(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    dx = max(3, ew // 6)
+    e.draw_both_rounded_rect_eyes(ew=ew, eh=eh, rx=rx,
+                                   pupil_dx=-dx, pupil_r=pr)
+    e.draw_mouth(smile=0, width=18)
+
+
+def expr_custom_look_right(e, ew=28, eh=28, rx=10, pupil_size="medium"):
+    pr = _pupil_r_for(min(ew, eh), pupil_size)
+    dx = max(3, ew // 6)
+    e.draw_both_rounded_rect_eyes(ew=ew, eh=eh, rx=rx,
+                                   pupil_dx=dx, pupil_r=pr)
+    e.draw_mouth(smile=0, width=18)
+
+
+CUSTOM_EXPRESSIONS = {
+    "normal":     expr_custom_normal,
+    "happy":      expr_custom_happy,
+    "sad":        expr_custom_sad,
+    "angry":      expr_custom_angry,
+    "surprised":  expr_custom_surprised,
+    "sleepy":     expr_custom_sleepy,
+    "wink":       expr_custom_wink,
+    "love":       expr_custom_love,
+    "look_left":  expr_custom_look_left,
+    "look_right": expr_custom_look_right,
+}
+
+
+def show_custom_expression(eyes, expr="normal", ew=28, eh=28, rx=10,
+                            pupil="medium"):
+    """
+    Hiển thị biểu cảm với hình dạng mắt tùy chỉnh.
+
+    Tham số:
+        eyes   : đối tượng Eyes
+        expr   : "normal" | "happy" | "sad" | "angry" | "surprised"
+                 "sleepy" | "wink" | "love" | "look_left" | "look_right"
+        ew     : chiều rộng mắt, px  [10 – 56]
+        eh     : chiều cao mắt, px   [10 – 40]
+        rx     : bán kính bo góc, px [0 – min(ew,eh)//2, tự động clamp]
+        pupil  : "small" | "medium" | "large"
+
+    Ví dụ:
+        show_custom_expression(e, 'happy', ew=36, eh=22, rx=8, pupil='large')
+        show_custom_expression(e, 'sad',   ew=16, eh=38, rx=4, pupil='small')
+        show_custom_expression(e, 'love',  ew=28, eh=28, rx=14, pupil='large')
+    """
+    fn = CUSTOM_EXPRESSIONS.get(expr)
+    if fn is None:
+        raise ValueError("Unknown custom expression: {}".format(expr))
+    ew, eh, rx = _validate_custom_params(ew, eh, rx)
+    eyes.clear()
+    fn(eyes, ew=ew, eh=eh, rx=rx, pupil_size=pupil)
+    eyes.show()
+
+
+# ================================================================== #
 #  EXPRESSION REGISTRY                                                #
 # ================================================================== #
 
