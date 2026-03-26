@@ -8,8 +8,6 @@
 
 'use strict';
 
-console.log('[Robot Eyes] Loading definition.js...');
-
 /* ================================================================== *
  *  COLOUR                                                             *
  * ================================================================== */
@@ -18,19 +16,6 @@ const ROBOT_EYES_COLOR = '#E85D24';
 /* ================================================================== *
  *  DROPDOWN OPTIONS                                                   *
  * ================================================================== */
-const EXPRESSION_OPTIONS = [
-  ['😐 Normal',    'normal'],
-  ['😊 Happy',     'happy'],
-  ['😢 Sad',       'sad'],
-  ['😠 Angry',     'angry'],
-  ['😲 Surprised', 'surprised'],
-  ['😴 Sleepy',    'sleepy'],
-  ['😕 Confused',  'confused'],
-  ['😍 Love',      'love'],
-  ['😉 Wink',      'wink'],
-  ['👀 Look Left', 'look_left'],
-  ['👀 Look Right','look_right'],
-];
 
 const ANIMATION_OPTIONS = [
   ['👁 Blink',        'blink'],
@@ -72,38 +57,8 @@ Blockly.Python['robot_setup'] = function(block) {
   Blockly.Python.definitions_['import_expressions'] = 'from expressions import show_expression';
   Blockly.Python.definitions_['import_animations'] = 'from animations import play_animation';
   Blockly.Python.definitions_['import_time'] = 'import time';
-  
+
   var code = 'e = Eyes(scl_pin=Pin(pin19.pin), sda_pin=Pin(pin20.pin))\n';
-  return code;
-};
-
-/* ================================================================== *
- *  2. SHOW EXPRESSION                                                 *
- * ================================================================== */
-Blockly.Blocks['robot_show_expression'] = {
-  init: function() {
-    this.jsonInit({
-      "type": "robot_show_expression",
-      "message0": "😊 Show %1",
-      "args0": [
-        {
-          "type": "field_dropdown",
-          "name": "EXPR",
-          "options": EXPRESSION_OPTIONS
-        }
-      ],
-      "previousStatement": null,
-      "nextStatement": null,
-      "colour": ROBOT_EYES_COLOR,
-      "tooltip": "Display a facial expression on the OLED screen.",
-      "helpUrl": ""
-    });
-  }
-};
-
-Blockly.Python['robot_show_expression'] = function(block) {
-  var dropdown_expr = block.getFieldValue('EXPR');
-  var code = 'show_expression(e, \'' + dropdown_expr + '\')\n';
   return code;
 };
 
@@ -114,7 +69,7 @@ Blockly.Blocks['robot_play_animation'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_play_animation",
-      "message0": "✨ Play %1 × %2 Speed: %3",
+      "message0": "✨ Play %1 Times: %2 Speed: %3",
       "args0": [
         {
           "type": "field_dropdown",
@@ -232,7 +187,7 @@ const SQUARE_SHAPE_OPTIONS = [
   ['▬ Wide flat',        'wide'],
 ];
 
-const SQUARE_EXPR_OPTIONS = [
+const EXPR_OPTIONS = [
   ['😐 Normal',    'normal'],
   ['😊 Happy',     'happy'],
   ['😢 Sad',       'sad'],
@@ -259,7 +214,7 @@ Blockly.Blocks['robot_show_square'] = {
         {
           "type": "field_dropdown",
           "name": "EXPR",
-          "options": SQUARE_EXPR_OPTIONS
+          "options": EXPR_OPTIONS
         }
       ],
       "previousStatement": null,
@@ -290,19 +245,6 @@ const OVAL_SHAPE_OPTIONS = [
   ['👁 Big bubble',  'big'],
 ];
 
-const OVAL_EXPR_OPTIONS = [
-  ['😐 Normal',    'normal'],
-  ['😊 Happy',     'happy'],
-  ['😢 Sad',       'sad'],
-  ['😠 Angry',     'angry'],
-  ['😲 Surprised', 'surprised'],
-  ['😴 Sleepy',    'sleepy'],
-  ['😉 Wink',      'wink'],
-  ['😍 Love',      'love'],
-  ['👀 Look Left', 'look_left'],
-  ['👀 Look Right','look_right'],
-];
-
 Blockly.Blocks['robot_show_oval'] = {
   init: function() {
     this.jsonInit({
@@ -317,7 +259,7 @@ Blockly.Blocks['robot_show_oval'] = {
         {
           "type": "field_dropdown",
           "name": "EXPR",
-          "options": OVAL_EXPR_OPTIONS
+          "options": EXPR_OPTIONS
         }
       ],
       "previousStatement": null,

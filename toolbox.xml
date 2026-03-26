@@ -1,9 +1,6 @@
 <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
   <category name="Robot Eyes" colour="#E85D24" icon="fa-eye">
     <block type="robot_setup"/>
-    <block type="robot_show_expression">
-      <field name="EXPR">normal</field>
-    </block>    
     <block type="robot_show_square">
       <field name="SHAPE">balanced</field>
       <field name="EXPR">normal</field>
@@ -17,7 +14,7 @@
       <field name="ANIM">blink</field>
       <field name="TIMES">1</field>
       <field name="SPEED">1.0</field>
-    </block>    
+    </block>
     <label text="⚡ Non-Blocking animation (run inside main loop)"/>
     <block type="robot_create_animation_nb">
       <field name="ANIM">blink</field>
