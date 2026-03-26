@@ -4,6 +4,8 @@
  *
  * Style: jsonInit (OhStem standard)
  * Usage: load AFTER blockly.min.js in your HTML
+ * 
+ * Note: All messages and tooltips are loaded from languages/en.js and languages/vi.js
  */
 
 'use strict';
@@ -14,38 +16,76 @@
 const ROBOT_EYES_COLOR = '#E85D24';
 
 /* ================================================================== *
- *  DROPDOWN OPTIONS                                                   *
+ *  DROPDOWN OPTIONS - ANIMATION                                       *
  * ================================================================== */
-
 const ANIMATION_OPTIONS = [
-  ['👁 Blink',        'blink'],
-  ['👀 Look Around',  'look_around'],
-  ['💫 Dizzy',        'dizzy'],
-  ['😴→😊 Wake Up',   'wake_up'],
-  ['😱 Shocked',      'shocked'],
-  ['😊 Happy Bounce', 'happy_bounce'],
-  ['🔁 Idle Blink',   'idle'],
-];
-
-const SPEED_OPTIONS = [
-  ['Normal (1×)', '1.0'],
-  ['Fast (2×)',   '2.0'],
-  ['Slow (0.5×)', '0.5'],
+  [Blockly.Msg.ANIMATION_BLINK,        'blink'],
+  [Blockly.Msg.ANIMATION_LOOK_AROUND,  'look_around'],
+  [Blockly.Msg.ANIMATION_DIZZY,        'dizzy'],
+  [Blockly.Msg.ANIMATION_WAKE_UP,      'wake_up'],
+  [Blockly.Msg.ANIMATION_SHOCKED,      'shocked'],
+  [Blockly.Msg.ANIMATION_HAPPY_BOUNCE, 'happy_bounce'],
+  [Blockly.Msg.ANIMATION_IDLE,         'idle'],
 ];
 
 /* ================================================================== *
- *  1. ROBOT EYES SETUP (simple statement block)                       *
+ *  DROPDOWN OPTIONS - SPEED                                           *
+ * ================================================================== */
+const SPEED_OPTIONS = [
+  [Blockly.Msg.SPEED_NORMAL, '1.0'],
+  [Blockly.Msg.SPEED_FAST,   '2.0'],
+  [Blockly.Msg.SPEED_SLOW,   '0.5'],
+];
+
+/* ================================================================== *
+ *  DROPDOWN OPTIONS - EXPRESSION (for square and oval eyes)           *
+ * ================================================================== */
+const EXPR_OPTIONS = [
+  [Blockly.Msg.EXPR_NORMAL,     'normal'],
+  [Blockly.Msg.EXPR_HAPPY,      'happy'],
+  [Blockly.Msg.EXPR_SAD,        'sad'],
+  [Blockly.Msg.EXPR_ANGRY,      'angry'],
+  [Blockly.Msg.EXPR_SURPRISED,  'surprised'],
+  [Blockly.Msg.EXPR_SLEEPY,     'sleepy'],
+  [Blockly.Msg.EXPR_WINK,       'wink'],
+  [Blockly.Msg.EXPR_LOVE,       'love'],
+  [Blockly.Msg.EXPR_LOOK_LEFT,  'look_left'],
+  [Blockly.Msg.EXPR_LOOK_RIGHT, 'look_right'],
+];
+
+/* ================================================================== *
+ *  DROPDOWN OPTIONS - SQUARE SHAPE                                    *
+ * ================================================================== */
+const SQUARE_SHAPE_OPTIONS = [
+  [Blockly.Msg.SQUARE_SHAPE_SHARP,     'sharp'],
+  [Blockly.Msg.SQUARE_SHAPE_BALANCED,  'balanced'],
+  [Blockly.Msg.SQUARE_SHAPE_ROUND,     'round'],
+  [Blockly.Msg.SQUARE_SHAPE_WIDE,      'wide'],
+];
+
+/* ================================================================== *
+ *  DROPDOWN OPTIONS - OVAL SHAPE                                      *
+ * ================================================================== */
+const OVAL_SHAPE_OPTIONS = [
+  [Blockly.Msg.OVAL_SHAPE_NORMAL,  'normal'],
+  [Blockly.Msg.OVAL_SHAPE_WIDE,    'wide'],
+  [Blockly.Msg.OVAL_SHAPE_TALL,    'tall'],
+  [Blockly.Msg.OVAL_SHAPE_BIG,     'big'],
+];
+
+/* ================================================================== *
+ *  1. ROBOT EYES SETUP                                                *
  * ================================================================== */
 Blockly.Blocks['robot_setup'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_setup",
-      "message0": "🤖 Robot Eyes Setup",
+      "message0": Blockly.Msg.ROBOT_EYES_SETUP_MESSAGE,
       "previousStatement": null,
       "nextStatement": null,
       "colour": ROBOT_EYES_COLOR,
-      "tooltip": "Initialize the OLED display",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_EYES_SETUP_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_EYES_SETUP_HELPURL
     });
   }
 };
@@ -59,17 +99,18 @@ Blockly.Python['robot_setup'] = function(block) {
   Blockly.Python.definitions_['import_time'] = 'import time';
 
   var code = 'e = Eyes(scl_pin=Pin(pin19.pin), sda_pin=Pin(pin20.pin))\n';
+  code += 'show_expression(e, \'normal\')  # Show normal expression by default\n';
   return code;
 };
 
 /* ================================================================== *
- *  3. PLAY ANIMATION                                                  *
+ *  2. PLAY ANIMATION (BLOCKING)                                       *
  * ================================================================== */
 Blockly.Blocks['robot_play_animation'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_play_animation",
-      "message0": "✨ Play %1 Times: %2 Speed: %3",
+      "message0": Blockly.Msg.ROBOT_PLAY_ANIMATION_MESSAGE,
       "args0": [
         {
           "type": "field_dropdown",
@@ -92,8 +133,8 @@ Blockly.Blocks['robot_play_animation'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": ROBOT_EYES_COLOR,
-      "tooltip": "BLOCKING: Plays animation and WAITS until complete before continuing. Use for simple sequences. Do NOT use inside 'while True' loops. CPU is blocked during animation.",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_PLAY_ANIMATION_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_PLAY_ANIMATION_HELPURL
     });
   }
 };
@@ -107,35 +148,25 @@ Blockly.Python['robot_play_animation'] = function(block) {
 };
 
 /* ================================================================== *
- *  3b. PLAY ANIMATION (NON-BLOCKING) - For while loops               *
+ *  3. CREATE ANIMATION (NON-BLOCKING)                                 *
  * ================================================================== */
-
-const NB_ANIMATION_OPTIONS = [
-  ['👁 Blink',        'blink'],
-  ['👀 Look Around',  'look_around'],
-  ['💫 Dizzy',        'dizzy'],
-  ['😴→😊 Wake Up',   'wake_up'],
-  ['😱 Shocked',      'shocked'],
-  ['😊 Happy Bounce', 'happy_bounce'],
-];
-
 Blockly.Blocks['robot_create_animation_nb'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_create_animation_nb",
-      "message0": "✨ Create Animation (non-blocking) %1",
+      "message0": Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_MESSAGE,
       "args0": [
         {
           "type": "field_dropdown",
           "name": "ANIM",
-          "options": NB_ANIMATION_OPTIONS
+          "options": ANIMATION_OPTIONS
         }
       ],
       "previousStatement": null,
       "nextStatement": null,
       "colour": ROBOT_EYES_COLOR,
-      "tooltip": "NON-BLOCKING: Use inside 'while True' loop. Creates animation object. Call update block each frame. Animation speed depends on time.sleep_ms() in your loop (e.g., 16ms=fast, 100ms=slow).",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_CREATE_ANIMATION_NB_HELPURL
     });
   }
 };
@@ -144,67 +175,58 @@ Blockly.Python['robot_create_animation_nb'] = function(block) {
   Blockly.Python.definitions_['import_nonblocking'] = 'from nonblocking_anim import create_animation';
   var dropdown_anim = block.getFieldValue('ANIM');
   var code = '# Non-blocking animation - creates animation object\n';
+  code += '# Initialize variable if not exists\n';
+  code += 'try:\n';
+  code += '    current_anim\n';
+  code += 'except NameError:\n';
+  code += '    current_anim = None\n';
+  code += '\n';
   code += '# Speed depends on time.sleep_ms() in your loop (16ms=fast, 100ms=slow)\n';
-  code += 'current_anim = create_animation(e, \'' + dropdown_anim + '\')\n';
-  code += 'current_anim.init()\n';
+  code += 'if current_anim is None:\n';
+  code += '    current_anim = create_animation(e, \'' + dropdown_anim + '\')\n';
+  code += '    current_anim.init()\n';
   return code;
 };
 
 /* ================================================================== *
- *  3c. UPDATE ANIMATION (for non-blocking loop)                      *
+ *  4. UPDATE ANIMATION (NON-BLOCKING)                                 *
  * ================================================================== */
-
 Blockly.Blocks['robot_update_animation_nb'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_update_animation_nb",
-      "message0": "🔄 Update Animation (non-blocking)",
+      "message0": Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_MESSAGE,
       "previousStatement": null,
       "nextStatement": null,
       "colour": ROBOT_EYES_COLOR,
-      "tooltip": "Updates non-blocking animation by one frame. Use inside 'while True' loop after creating animation. Returns True if animation still running.",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_UPDATE_ANIMATION_NB_HELPURL
     });
   }
 };
 
 Blockly.Python['robot_update_animation_nb'] = function(block) {
   var code = '# Update animation frame\n';
-  code += 'is_running = current_anim.update()\n';
-  code += 'if not is_running:\n';
-  code += '    current_anim.init()\n';
+  code += '# Initialize variable if not exists\n';
+  code += 'try:\n';
+  code += '    current_anim\n';
+  code += 'except NameError:\n';
+  code += '    current_anim = None\n';
+  code += '\n';
+  code += '# Update animation (auto-restarts when done)\n';
+  code += 'if current_anim is not None:\n';
+  code += '    current_anim.update()  # Returns True always (auto-restart)\n';
   return code;
 };
 
 /* ================================================================== *
- *  4. SHOW SQUARE EXPRESSION (Style A — Rounded Rectangle)           *
+ *  5. SHOW SQUARE EXPRESSION                                          *
  * ================================================================== */
-
-const SQUARE_SHAPE_OPTIONS = [
-  ['⬜ Sharp (rx=4)',    'sharp'],
-  ['🔲 Balanced (rx=10)', 'balanced'],
-  ['🔘 Round (rx=14)',   'round'],
-  ['▬ Wide flat',        'wide'],
-];
-
-const EXPR_OPTIONS = [
-  ['😐 Normal',    'normal'],
-  ['😊 Happy',     'happy'],
-  ['😢 Sad',       'sad'],
-  ['😠 Angry',     'angry'],
-  ['😲 Surprised', 'surprised'],
-  ['😴 Sleepy',    'sleepy'],
-  ['😉 Wink',      'wink'],
-  ['😍 Love',      'love'],
-  ['👀 Look Left', 'look_left'],
-  ['👀 Look Right','look_right'],
-];
-
 Blockly.Blocks['robot_show_square'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_show_square",
-      "message0": "⬜ Square Eyes  Shape: %1  Face: %2",
+      "message0": Blockly.Msg.ROBOT_SHOW_SQUARE_MESSAGE,
       "args0": [
         {
           "type": "field_dropdown",
@@ -220,36 +242,27 @@ Blockly.Blocks['robot_show_square'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#533AB7",
-      "tooltip": "Style A: Rounded rectangle eyes. Choose a shape and an expression.",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_SHOW_SQUARE_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_SHOW_SQUARE_HELPURL
     });
   }
 };
 
 Blockly.Python['robot_show_square'] = function(block) {
-  Blockly.Python.definitions_['import_show_square'] =
-    'from expressions import show_square_expression';
+  Blockly.Python.definitions_['import_show_square'] = 'from expressions import show_square_expression';
   var shape = block.getFieldValue('SHAPE');
-  var expr  = block.getFieldValue('EXPR');
+  var expr = block.getFieldValue('EXPR');
   return 'show_square_expression(e, shape=\'' + shape + '\', expr=\'' + expr + '\')\n';
 };
 
 /* ================================================================== *
- *  5. SHOW OVAL EXPRESSION (Style B — Oggy Oval)                     *
+ *  6. SHOW OVAL EXPRESSION                                            *
  * ================================================================== */
-
-const OVAL_SHAPE_OPTIONS = [
-  ['🔵 Normal oval',  'normal'],
-  ['🏈 Wide flat',    'wide'],
-  ['🥚 Tall oval',    'tall'],
-  ['👁 Big bubble',  'big'],
-];
-
 Blockly.Blocks['robot_show_oval'] = {
   init: function() {
     this.jsonInit({
       "type": "robot_show_oval",
-      "message0": "👁 Oval Eyes  Shape: %1  Face: %2",
+      "message0": Blockly.Msg.ROBOT_SHOW_OVAL_MESSAGE,
       "args0": [
         {
           "type": "field_dropdown",
@@ -265,16 +278,15 @@ Blockly.Blocks['robot_show_oval'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#0F6E56",
-      "tooltip": "Style B: Oggy-style oval eyes. Choose a shape and an expression.",
-      "helpUrl": ""
+      "tooltip": Blockly.Msg.ROBOT_SHOW_OVAL_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_SHOW_OVAL_HELPURL
     });
   }
 };
 
 Blockly.Python['robot_show_oval'] = function(block) {
-  Blockly.Python.definitions_['import_show_oval'] =
-    'from expressions import show_oval_expression';
+  Blockly.Python.definitions_['import_show_oval'] = 'from expressions import show_oval_expression';
   var shape = block.getFieldValue('SHAPE');
-  var expr  = block.getFieldValue('EXPR');
+  var expr = block.getFieldValue('EXPR');
   return 'show_oval_expression(e, shape=\'' + shape + '\', expr=\'' + expr + '\')\n';
 };
