@@ -5,7 +5,8 @@
         "ssd1306.py",
         "eyes.py",
         "animations.py",
-        "expressions.py"
+        "expressions.py",
+        "nonblocking_anim.py"
     ],
     "blocks": [
         "definition.js"

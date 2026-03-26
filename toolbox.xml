@@ -3,12 +3,7 @@
     <block type="robot_setup"/>
     <block type="robot_show_expression">
       <field name="EXPR">normal</field>
-    </block>
-    <block type="robot_play_animation">
-      <field name="ANIM">blink</field>
-      <field name="TIMES">1</field>
-      <field name="SPEED">1.0</field>
-    </block>
+    </block>    
     <block type="robot_show_square">
       <field name="SHAPE">balanced</field>
       <field name="EXPR">normal</field>
@@ -17,5 +12,16 @@
       <field name="SHAPE">normal</field>
       <field name="EXPR">normal</field>
     </block>
+    <label text="⚠️ Blocking animation (run until done)"/>
+    <block type="robot_play_animation">
+      <field name="ANIM">blink</field>
+      <field name="TIMES">1</field>
+      <field name="SPEED">1.0</field>
+    </block>    
+    <label text="⚡ Non-Blocking animation (run inside main loop)"/>
+    <block type="robot_create_animation_nb">
+      <field name="ANIM">blink</field>
+    </block>
+    <block type="robot_update_animation_nb"/>
   </category>
 </xml>

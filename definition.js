@@ -137,7 +137,7 @@ Blockly.Blocks['robot_play_animation'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": ROBOT_EYES_COLOR,
-      "tooltip": "Play a built-in animation sequence.",
+      "tooltip": "BLOCKING: Plays animation and WAITS until complete before continuing. Use for simple sequences. Do NOT use inside 'while True' loops. CPU is blocked during animation.",
       "helpUrl": ""
     });
   }
@@ -148,6 +148,76 @@ Blockly.Python['robot_play_animation'] = function(block) {
   var number_times = block.getFieldValue('TIMES');
   var dropdown_speed = block.getFieldValue('SPEED');
   var code = 'play_animation(e, \'' + dropdown_anim + '\', times=' + number_times + ', speed=' + dropdown_speed + ')\n';
+  return code;
+};
+
+/* ================================================================== *
+ *  3b. PLAY ANIMATION (NON-BLOCKING) - For while loops               *
+ * ================================================================== */
+
+const NB_ANIMATION_OPTIONS = [
+  ['👁 Blink',        'blink'],
+  ['👀 Look Around',  'look_around'],
+  ['💫 Dizzy',        'dizzy'],
+  ['😴→😊 Wake Up',   'wake_up'],
+  ['😱 Shocked',      'shocked'],
+  ['😊 Happy Bounce', 'happy_bounce'],
+];
+
+Blockly.Blocks['robot_create_animation_nb'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_create_animation_nb",
+      "message0": "✨ Create Animation (non-blocking) %1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "ANIM",
+          "options": NB_ANIMATION_OPTIONS
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": ROBOT_EYES_COLOR,
+      "tooltip": "NON-BLOCKING: Use inside 'while True' loop. Creates animation object. Call update block each frame. Animation speed depends on time.sleep_ms() in your loop (e.g., 16ms=fast, 100ms=slow).",
+      "helpUrl": ""
+    });
+  }
+};
+
+Blockly.Python['robot_create_animation_nb'] = function(block) {
+  Blockly.Python.definitions_['import_nonblocking'] = 'from nonblocking_anim import create_animation';
+  var dropdown_anim = block.getFieldValue('ANIM');
+  var code = '# Non-blocking animation - creates animation object\n';
+  code += '# Speed depends on time.sleep_ms() in your loop (16ms=fast, 100ms=slow)\n';
+  code += 'current_anim = create_animation(e, \'' + dropdown_anim + '\')\n';
+  code += 'current_anim.init()\n';
+  return code;
+};
+
+/* ================================================================== *
+ *  3c. UPDATE ANIMATION (for non-blocking loop)                      *
+ * ================================================================== */
+
+Blockly.Blocks['robot_update_animation_nb'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_update_animation_nb",
+      "message0": "🔄 Update Animation (non-blocking)",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": ROBOT_EYES_COLOR,
+      "tooltip": "Updates non-blocking animation by one frame. Use inside 'while True' loop after creating animation. Returns True if animation still running.",
+      "helpUrl": ""
+    });
+  }
+};
+
+Blockly.Python['robot_update_animation_nb'] = function(block) {
+  var code = '# Update animation frame\n';
+  code += 'is_running = current_anim.update()\n';
+  code += 'if not is_running:\n';
+  code += '    current_anim.init()\n';
   return code;
 };
 
