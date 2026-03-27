@@ -271,6 +271,8 @@ _CUSTOM_ANIM_STATE = {
     'phase': 'idle',  # idle, move, action
     'x_offset': 0,
     'y_offset': 0,
+    'vx': 1,  # velocity X for bounce movement
+    'vy': 1,  # velocity Y for bounce movement
     'frame': 0,
     'last_switch': 0,
     'idle_duration': 2000,   # 2 seconds
@@ -296,7 +298,7 @@ def _get_pupil_r():
     """Get pupil radius based on config."""
     from expressions import _pupil_r_for
     es = min(_CUSTOM_EYES_CONFIG['ew'], _CUSTOM_EYES_CONFIG['eh'])
-    return _pupil_r_for(es, _CUSTOM_EYES_CONFIG['pupil'])
+    return int(_pupil_r_for(es, _CUSTOM_EYES_CONFIG['pupil']))
 
 
 def _draw_custom_eyes_at(e, cx, cy, pupil_dx=0, pupil_dy=0, closed=False, half_open=False):
@@ -466,19 +468,31 @@ def _idle_love(e, frame):
 
 
 def _idle_look_left(e, frame):
-    """Look left idle: pupil stays left."""
+    """Look left idle: pupil stays left + random blink."""
     cx, cy = 64 + _CUSTOM_ANIM_STATE['x_offset'], 32 + _CUSTOM_ANIM_STATE['y_offset']
-    _draw_custom_eyes_at(e, cx - 32, cy, pupil_dx=-5)
-    _draw_custom_eyes_at(e, cx + 32, cy, pupil_dx=-5)
+    cfg = _CUSTOM_EYES_CONFIG
+    # Random blink every ~100 frames
+    if frame % 100 < 10:
+        e.draw_rounded_rect_eye(cx - 32, cy, ew=cfg['ew'], eh=cfg['eh'], rx=cfg['rx'], closed=True)
+        e.draw_rounded_rect_eye(cx + 32, cy, ew=cfg['ew'], eh=cfg['eh'], rx=cfg['rx'], closed=True)
+    else:
+        _draw_custom_eyes_at(e, cx - 32, cy, pupil_dx=-5)
+        _draw_custom_eyes_at(e, cx + 32, cy, pupil_dx=-5)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
 
 
 def _idle_look_right(e, frame):
-    """Look right idle: pupil stays right."""
+    """Look right idle: pupil stays right + random blink."""
     cx, cy = 64 + _CUSTOM_ANIM_STATE['x_offset'], 32 + _CUSTOM_ANIM_STATE['y_offset']
-    _draw_custom_eyes_at(e, cx - 32, cy, pupil_dx=5)
-    _draw_custom_eyes_at(e, cx + 32, cy, pupil_dx=5)
+    cfg = _CUSTOM_EYES_CONFIG
+    # Random blink every ~100 frames
+    if frame % 100 < 10:
+        e.draw_rounded_rect_eye(cx - 32, cy, ew=cfg['ew'], eh=cfg['eh'], rx=cfg['rx'], closed=True)
+        e.draw_rounded_rect_eye(cx + 32, cy, ew=cfg['ew'], eh=cfg['eh'], rx=cfg['rx'], closed=True)
+    else:
+        _draw_custom_eyes_at(e, cx - 32, cy, pupil_dx=5)
+        _draw_custom_eyes_at(e, cx + 32, cy, pupil_dx=5)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
 
@@ -499,133 +513,145 @@ _IDLE_FUNCS = {
 
 def _get_move_limits():
     """Calculate safe movement limits based on eye size.
-    
+
     Screen: 128x64
     Eyes center: x=32/96, y=32
     Mouth: y=52
-    
+
     Returns:
-        (x_max, y_max_up, y_max_down) - maximum offsets in each direction
+        (x_max, y_max_up, y_max_down) - maximum offsets in each direction (all ints)
     """
     cfg = _CUSTOM_EYES_CONFIG
-    ew, eh = cfg['ew'], cfg['eh']
-    
+    ew, eh = int(cfg['ew']), int(cfg['eh'])
+
     # X limits: ensure both eyes stay within 0-128
     # Left eye: (32 + x) - ew/2 >= 0  →  x >= -32 + ew/2
     # Right eye: (96 + x) + ew/2 <= 128  →  x <= 32 - ew/2
-    x_limit_left = -32 + ew // 2 + 2   # +2 padding
-    x_limit_right = 32 - ew // 2 - 2
-    
+    x_limit_left = int(-32 + ew // 2 + 2)   # +2 padding
+    x_limit_right = int(32 - ew // 2 - 2)
+
     # Y limits (positive = down, negative = up):
     # Up limit: brow stays >= 0
     #   Brow at: (32 + y) - eh/2 - 8 >= 0  →  y >= eh/2 - 24
     #   So y_min = eh/2 - 24 (negative means can move up)
-    y_limit_up = -(24 - eh // 2 - 2)  # Can move up by this amount
-    
+    y_limit_up = int(-(24 - eh // 2 - 2))  # Can move up by this amount
+
     # Down limit: mouth stays <= 64
     #   Mouth at: 52 + y <= 60  →  y <= 8
     y_limit_down = 8
-    
-    x_max = min(abs(x_limit_left), abs(x_limit_right))
-    
+
+    x_max = int(min(abs(x_limit_left), abs(x_limit_right)))
+
     return x_max, max(0, y_limit_up), y_limit_down
 
 
-def _move_normal(e, frame, progress):
-    """Normal move: smooth slide left-right."""
+def _update_bounce_position(speed_x=1, speed_y=1):
+    """
+    Update position with bounce movement.
+    Reverses direction when hitting screen limits.
+
+    Args:
+        speed_x: horizontal speed (1-3)
+        speed_y: vertical speed (1-3)
+
+    Returns:
+        (x_offset, y_offset) - new position
+    """
     x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 12) * math.sin(2 * math.pi * progress))
-    y = int(min(y_max_down, 4) * math.sin(2 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+
+    # Get current velocity (default to 1 or -1)
+    vx = _CUSTOM_ANIM_STATE.get('vx', 1)
+    vy = _CUSTOM_ANIM_STATE.get('vy', 1)
+    
+    # Ensure velocity direction is correct (±1)
+    if vx == 0:
+        vx = 1
+    if vy == 0:
+        vy = 1
+
+    # Update position with speed
+    x = _CUSTOM_ANIM_STATE['x_offset'] + int(vx * speed_x)
+    y = _CUSTOM_ANIM_STATE['y_offset'] + int(vy * speed_y)
+
+    # Bounce off X walls
+    if x > x_max:
+        x = x_max
+        _CUSTOM_ANIM_STATE['vx'] = -abs(vx)
+    elif x < -x_max:
+        x = -x_max
+        _CUSTOM_ANIM_STATE['vx'] = abs(vx)
+
+    # Bounce off Y walls
+    if y > y_max_down:
+        y = y_max_down
+        _CUSTOM_ANIM_STATE['vy'] = -abs(vy)
+    elif y < -y_max_up:
+        y = -y_max_up
+        _CUSTOM_ANIM_STATE['vy'] = abs(vy)
+
+    _CUSTOM_ANIM_STATE['x_offset'] = int(x)
+    _CUSTOM_ANIM_STATE['y_offset'] = int(y)
+
+    return x, y
+
+
+def _move_normal(e, frame, progress):
+    """Normal move: bounce around screen."""
+    _update_bounce_position(speed_x=1, speed_y=1)
     _idle_normal(e, frame)
 
 
 def _move_happy(e, frame, progress):
-    """Happy move: bounce while moving."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
-    y = int(min(y_max_down, 3) * math.sin(4 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+    """Happy move: bounce around with extra bounce."""
+    _update_bounce_position(speed_x=2, speed_y=2)
     _idle_happy(e, frame)
 
 
 def _move_sad(e, frame, progress):
-    """Sad move: slow drift."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 10) * math.sin(math.pi * progress))
-    y = int(min(y_max_down, 3) * math.cos(2 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+    """Sad move: slow bounce."""
+    _update_bounce_position(speed_x=1, speed_y=1)
     _idle_sad(e, frame)
 
 
 def _move_angry(e, frame, progress):
-    """Angry move: fast jerky movement."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 10) * math.sin(4 * math.pi * progress))
-    y = int(max(-y_max_up, -5) * math.cos(6 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+    """Angry move: fast jerky bounce."""
+    _update_bounce_position(speed_x=3, speed_y=2)
     _idle_angry(e, frame)
 
 
 def _move_surprised(e, frame, progress):
-    """Surprised move: jump scare style."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 8) * math.sin(2 * math.pi * progress * 3))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = 0
+    """Surprised move: quick bounce."""
+    _update_bounce_position(speed_x=2, speed_y=3)
     _idle_surprised(e, frame)
 
 
 def _move_sleepy(e, frame, progress):
-    """Sleepy move: very slow drift."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 8) * math.sin(math.pi * progress / 2))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = 0
+    """Sleepy move: very slow bounce."""
+    _update_bounce_position(speed_x=1, speed_y=0)
     _idle_sleepy(e, frame)
 
 
 def _move_wink(e, frame, progress):
-    """Wink move: playful zigzag."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
-    y = int(min(y_max_down, 4) * math.sin(4 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+    """Wink move: playful fast bounce."""
+    _update_bounce_position(speed_x=2, speed_y=2)
     _idle_wink(e, frame)
 
 
 def _move_love(e, frame, progress):
-    """Love move: smooth figure-8."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
-    y = int(min(y_max_down, 4) * math.sin(4 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = y
+    """Love move: smooth bounce."""
+    _update_bounce_position(speed_x=2, speed_y=2)
     _idle_love(e, frame)
 
 
 def _move_look_left(e, frame, progress):
-    """Look left move: slide to left."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    # Look left: bias toward left side
-    x = int(-min(x_max // 2, 8) + min(x_max, 6) * math.sin(2 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = 0
+    """Look left move: bounce around screen, pupils stay left."""
+    _update_bounce_position(speed_x=2, speed_y=2)
     _idle_look_left(e, frame)
 
 
 def _move_look_right(e, frame, progress):
-    """Look right move: slide to right."""
-    x_max, y_max_up, y_max_down = _get_move_limits()
-    # Look right: bias toward right side
-    x = int(min(x_max // 2, 8) + min(x_max, 6) * math.sin(2 * math.pi * progress))
-    _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = 0
+    """Look right move: bounce around screen, pupils stay right."""
+    _update_bounce_position(speed_x=2, speed_y=2)
     _idle_look_right(e, frame)
 
 

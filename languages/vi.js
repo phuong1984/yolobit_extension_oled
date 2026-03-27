@@ -87,7 +87,7 @@ Blockly.Msg.EXPR_LOOK_RIGHT = "👀 Nhìn phải"
 // Custom expression block
 // ==================================================================
 Blockly.Msg.ROBOT_SHOW_CUSTOM_MESSAGE =
-    "Mắt tùy chỉnh  Biểu cảm: %1  Chiều rộng mắt: %2 px  Chiều cao mắt: %3 px  Bán kính góc: %4 px  Con ngươi: %5";
+    "Mắt tùy chỉnh  Biểu cảm: %1  Chiều rộng mắt: %2 px  Chiều cao mắt: %3 px  Bo tròn: %4 px  Con ngươi: %5";
 
 Blockly.Msg.PUPIL_SMALL  = "nhỏ";
 Blockly.Msg.PUPIL_MEDIUM = "vừa";
