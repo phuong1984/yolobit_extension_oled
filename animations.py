@@ -432,12 +432,13 @@ def _idle_sleepy(e, frame):
         _draw_custom_eyes_at(e, cx + 32, cy, half_open=True)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
-    # Draw zzz
+    # Draw zzz - moves with eyes
     for i, (zx, zy) in enumerate([(100, 8), (106, 5), (112, 2)]):
         sz = 2 + i
-        e.oled.hline(zx, zy, sz, 1)
-        e.oled.line(zx + sz, zy, zx, zy + sz, 1)
-        e.oled.hline(zx, zy + sz, sz, 1)
+        e.oled.hline(zx + _CUSTOM_ANIM_STATE['x_offset'], zy + _CUSTOM_ANIM_STATE['y_offset'], sz, 1)
+        e.oled.line(zx + sz + _CUSTOM_ANIM_STATE['x_offset'], zy + _CUSTOM_ANIM_STATE['y_offset'],
+                    zx + _CUSTOM_ANIM_STATE['x_offset'], zy + sz + _CUSTOM_ANIM_STATE['y_offset'], 1)
+        e.oled.hline(zx + _CUSTOM_ANIM_STATE['x_offset'], zy + sz + _CUSTOM_ANIM_STATE['y_offset'], sz, 1)
 
 
 def _idle_wink(e, frame):
@@ -496,18 +497,55 @@ _IDLE_FUNCS = {
 }
 
 
+def _get_move_limits():
+    """Calculate safe movement limits based on eye size.
+    
+    Screen: 128x64
+    Eyes center: x=32/96, y=32
+    Mouth: y=52
+    
+    Returns:
+        (x_max, y_max_up, y_max_down) - maximum offsets in each direction
+    """
+    cfg = _CUSTOM_EYES_CONFIG
+    ew, eh = cfg['ew'], cfg['eh']
+    
+    # X limits: ensure both eyes stay within 0-128
+    # Left eye: (32 + x) - ew/2 >= 0  →  x >= -32 + ew/2
+    # Right eye: (96 + x) + ew/2 <= 128  →  x <= 32 - ew/2
+    x_limit_left = -32 + ew // 2 + 2   # +2 padding
+    x_limit_right = 32 - ew // 2 - 2
+    
+    # Y limits (positive = down, negative = up):
+    # Up limit: brow stays >= 0
+    #   Brow at: (32 + y) - eh/2 - 8 >= 0  →  y >= eh/2 - 24
+    #   So y_min = eh/2 - 24 (negative means can move up)
+    y_limit_up = -(24 - eh // 2 - 2)  # Can move up by this amount
+    
+    # Down limit: mouth stays <= 64
+    #   Mouth at: 52 + y <= 60  →  y <= 8
+    y_limit_down = 8
+    
+    x_max = min(abs(x_limit_left), abs(x_limit_right))
+    
+    return x_max, max(0, y_limit_up), y_limit_down
+
+
 def _move_normal(e, frame, progress):
     """Normal move: smooth slide left-right."""
-    x = int(20 * math.sin(2 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 12) * math.sin(2 * math.pi * progress))
+    y = int(min(y_max_down, 4) * math.sin(2 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
-    _CUSTOM_ANIM_STATE['y_offset'] = 0
+    _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_normal(e, frame)
 
 
 def _move_happy(e, frame, progress):
     """Happy move: bounce while moving."""
-    x = int(25 * math.sin(2 * math.pi * progress))
-    y = int(5 * math.sin(4 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
+    y = int(min(y_max_down, 3) * math.sin(4 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_happy(e, frame)
@@ -515,8 +553,9 @@ def _move_happy(e, frame, progress):
 
 def _move_sad(e, frame, progress):
     """Sad move: slow drift."""
-    x = int(15 * math.sin(math.pi * progress))
-    y = int(5 * math.cos(2 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 10) * math.sin(math.pi * progress))
+    y = int(min(y_max_down, 3) * math.cos(2 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_sad(e, frame)
@@ -524,8 +563,9 @@ def _move_sad(e, frame, progress):
 
 def _move_angry(e, frame, progress):
     """Angry move: fast jerky movement."""
-    x = int(30 * math.sin(4 * math.pi * progress))
-    y = int(10 * math.cos(6 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 10) * math.sin(4 * math.pi * progress))
+    y = int(max(-y_max_up, -5) * math.cos(6 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_angry(e, frame)
@@ -533,7 +573,8 @@ def _move_angry(e, frame, progress):
 
 def _move_surprised(e, frame, progress):
     """Surprised move: jump scare style."""
-    x = int(10 * math.sin(2 * math.pi * progress * 3))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 8) * math.sin(2 * math.pi * progress * 3))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = 0
     _idle_surprised(e, frame)
@@ -541,7 +582,8 @@ def _move_surprised(e, frame, progress):
 
 def _move_sleepy(e, frame, progress):
     """Sleepy move: very slow drift."""
-    x = int(10 * math.sin(math.pi * progress / 2))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 8) * math.sin(math.pi * progress / 2))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = 0
     _idle_sleepy(e, frame)
@@ -549,8 +591,9 @@ def _move_sleepy(e, frame, progress):
 
 def _move_wink(e, frame, progress):
     """Wink move: playful zigzag."""
-    x = int(20 * math.sin(2 * math.pi * progress))
-    y = int(8 * math.sin(4 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
+    y = int(min(y_max_down, 4) * math.sin(4 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_wink(e, frame)
@@ -558,8 +601,9 @@ def _move_wink(e, frame, progress):
 
 def _move_love(e, frame, progress):
     """Love move: smooth figure-8."""
-    x = int(15 * math.sin(2 * math.pi * progress))
-    y = int(8 * math.sin(4 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    x = int(min(x_max, 10) * math.sin(2 * math.pi * progress))
+    y = int(min(y_max_down, 4) * math.sin(4 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = y
     _idle_love(e, frame)
@@ -567,7 +611,9 @@ def _move_love(e, frame, progress):
 
 def _move_look_left(e, frame, progress):
     """Look left move: slide to left."""
-    x = int(-20 + 10 * math.sin(2 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    # Look left: bias toward left side
+    x = int(-min(x_max // 2, 8) + min(x_max, 6) * math.sin(2 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = 0
     _idle_look_left(e, frame)
@@ -575,7 +621,9 @@ def _move_look_left(e, frame, progress):
 
 def _move_look_right(e, frame, progress):
     """Look right move: slide to right."""
-    x = int(20 + 10 * math.sin(2 * math.pi * progress))
+    x_max, y_max_up, y_max_down = _get_move_limits()
+    # Look right: bias toward right side
+    x = int(min(x_max // 2, 8) + min(x_max, 6) * math.sin(2 * math.pi * progress))
     _CUSTOM_ANIM_STATE['x_offset'] = x
     _CUSTOM_ANIM_STATE['y_offset'] = 0
     _idle_look_right(e, frame)
@@ -615,7 +663,7 @@ def _action_happy(e, frame):
     _draw_custom_eyes_at(e, cx - 32, cy + bounce)
     _draw_custom_eyes_at(e, cx + 32, cy + bounce)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + bounce)
-    # Extra wide smile - mouth follows eye x_offset
+    # Extra wide smile - mouth follows bounce
     e.draw_mouth(smile=12, width=32, y_offset=52 + _CUSTOM_ANIM_STATE['y_offset'] + bounce, cx=64 + _CUSTOM_ANIM_STATE['x_offset'])
     return frame >= 45
 
@@ -647,7 +695,7 @@ def _action_angry(e, frame):
     _draw_custom_eyes_at(e, cx - 32 + shake_x, cy + shake_y, pupil_dy=2)
     _draw_custom_eyes_at(e, cx + 32 + shake_x, cy + shake_y, pupil_dy=2)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'] + shake_x, y_offset=_CUSTOM_ANIM_STATE['y_offset'] + shake_y)
-    _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
+    _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'] + shake_x, y_offset=_CUSTOM_ANIM_STATE['y_offset'] + shake_y)
     return frame >= 40
 
 
@@ -659,11 +707,13 @@ def _action_surprised(e, frame):
         shake = 2 * (1 if frame % 6 < 3 else -1)
         _draw_custom_eyes_at(e, cx - 32 + shake, cy + y)
         _draw_custom_eyes_at(e, cx + 32 + shake, cy + y)
+        _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'] + shake, y_offset=_CUSTOM_ANIM_STATE['y_offset'] + y)
+        _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'] + shake, y_offset=_CUSTOM_ANIM_STATE['y_offset'] + y)
     else:
         _draw_custom_eyes_at(e, cx - 32, cy)
         _draw_custom_eyes_at(e, cx + 32, cy)
-    _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
-    _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
+        _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
+        _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
     return frame >= 40
 
 
@@ -688,12 +738,13 @@ def _action_sleepy(e, frame):
         _draw_custom_eyes_at(e, cx + 32, cy, half_open=True)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
-    # zzz
+    # zzz - moves with eyes
     for i, (zx, zy) in enumerate([(100, 8), (106, 5), (112, 2)]):
         sz = 2 + i
-        e.oled.hline(zx, zy, sz, 1)
-        e.oled.line(zx + sz, zy, zx, zy + sz, 1)
-        e.oled.hline(zx, zy + sz, sz, 1)
+        e.oled.hline(zx + _CUSTOM_ANIM_STATE['x_offset'], zy + _CUSTOM_ANIM_STATE['y_offset'], sz, 1)
+        e.oled.line(zx + sz + _CUSTOM_ANIM_STATE['x_offset'], zy + _CUSTOM_ANIM_STATE['y_offset'],
+                    zx + _CUSTOM_ANIM_STATE['x_offset'], zy + sz + _CUSTOM_ANIM_STATE['y_offset'], 1)
+        e.oled.hline(zx + _CUSTOM_ANIM_STATE['x_offset'], zy + sz + _CUSTOM_ANIM_STATE['y_offset'], sz, 1)
     return frame >= 100
 
 
@@ -721,8 +772,8 @@ def _action_love(e, frame):
     _draw_custom_eyes_at(e, cx + 32, cy + pulse)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
-    # Draw floating hearts
-    heart_y = (cy - 20 - (frame * 2) % 40)
+    # Draw floating hearts - clamp to screen
+    heart_y = max(4, min(44, cy - 20 - (frame * 2) % 40 + _CUSTOM_ANIM_STATE['y_offset']))
     if frame % 30 < 20:
         e.oled.pixel(cx + 10, heart_y, 1)
         e.oled.pixel(cx + 11, heart_y, 1)
@@ -815,7 +866,7 @@ def animate_custom_eyes(e, mode='all'):
     # Handle mode switching for 'all' mode
     if mode == 'all':
         elapsed = time.ticks_diff(now, _CUSTOM_ANIM_STATE['last_switch'])
-        
+
         if _CUSTOM_ANIM_STATE['phase'] == 'idle' and elapsed >= _CUSTOM_ANIM_STATE['idle_duration']:
             _CUSTOM_ANIM_STATE['phase'] = 'move'
             _CUSTOM_ANIM_STATE['last_switch'] = now
@@ -827,16 +878,20 @@ def animate_custom_eyes(e, mode='all'):
             _CUSTOM_ANIM_STATE['action_frame'] = 0
         elif _CUSTOM_ANIM_STATE['phase'] == 'action':
             _CUSTOM_ANIM_STATE['action_frame'] += 1
-            # Check if action is complete (each action returns True when done)
-            # We'll render and check
             if _CUSTOM_ANIM_STATE['action_frame'] >= 60:  # Default action duration
                 _CUSTOM_ANIM_STATE['phase'] = 'idle'
                 _CUSTOM_ANIM_STATE['last_switch'] = now
                 _CUSTOM_ANIM_STATE['frame'] = 0
                 _CUSTOM_ANIM_STATE['action_frame'] = 0
     else:
+        # Standalone mode: idle, move, or action
         _CUSTOM_ANIM_STATE['phase'] = mode
         _CUSTOM_ANIM_STATE['last_switch'] = now
+        # Increment action_frame for standalone action mode
+        if mode == 'action':
+            _CUSTOM_ANIM_STATE['action_frame'] += 1
+            if _CUSTOM_ANIM_STATE['action_frame'] >= 60:
+                _CUSTOM_ANIM_STATE['action_frame'] = 0  # Loop action
     
     # Clear screen
     e.clear()
