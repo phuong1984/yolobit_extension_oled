@@ -1,6 +1,6 @@
 {
-    "name": "Màn hình OLED I2C - biểu cảm Robot",
-    "description": "Mục mở rộng cho màn hình OLED I2C - thể hiện biểu cảm robot",
+    "name": "Màn hình OLED - Robot Eyes",
+    "description": "Mục mở rộng cho màn hình OLED I2C - thể hiện biểu cảm bằng mắt của robot",
     "libs": [
         "ssd1306.py",
         "eyes.py",
