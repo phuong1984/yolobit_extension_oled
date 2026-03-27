@@ -213,14 +213,16 @@ class Eyes:
         for t in range(thickness):
             self.oled.line(x1, y1 + t, x2, y2 + t, color)
 
-    def draw_mouth(self, smile=0, width=20, y_offset=52):
+    def draw_mouth(self, smile=0, width=20, y_offset=52, cx=None):
         """
         Draw a mouth arc.
         smile > 0 : happy (arc opens upward)
         smile < 0 : sad   (arc opens downward)
         smile = 0 : flat line
+        cx : center X position (default: SCREEN_W // 2 = 64)
         """
-        cx = SCREEN_W // 2
+        if cx is None:
+            cx = SCREEN_W // 2
         if smile == 0:
             self.oled.hline(cx - width // 2, y_offset, width, 1)
             self.oled.hline(cx - width // 2, y_offset + 1, width, 1)

@@ -147,6 +147,14 @@ Blockly.Python['robot_play_animation'] = function(block) {
   return code;
 };
 
+const NB_ANIMATION_OPTIONS = [
+  [Blockly.Msg.ANIMATION_BLINK,        'blink'],
+  [Blockly.Msg.ANIMATION_LOOK_AROUND,  'look_around'],
+  [Blockly.Msg.ANIMATION_DIZZY,        'dizzy'],
+  [Blockly.Msg.ANIMATION_WAKE_UP,      'wake_up'],
+  [Blockly.Msg.ANIMATION_SHOCKED,      'shocked'],
+  [Blockly.Msg.ANIMATION_HAPPY_BOUNCE, 'happy_bounce'],
+];
 /* ================================================================== *
  *  3. CREATE ANIMATION (NON-BLOCKING)                                 *
  * ================================================================== */
@@ -159,7 +167,7 @@ Blockly.Blocks['robot_create_animation_nb'] = {
         {
           "type": "field_dropdown",
           "name": "ANIM",
-          "options": ANIMATION_OPTIONS
+          "options": NB_ANIMATION_OPTIONS
         }
       ],
       "previousStatement": null,
@@ -175,16 +183,8 @@ Blockly.Python['robot_create_animation_nb'] = function(block) {
   Blockly.Python.definitions_['import_nonblocking'] = 'from nonblocking_anim import create_animation';
   var dropdown_anim = block.getFieldValue('ANIM');
   var code = '# Non-blocking animation - creates animation object\n';
-  code += '# Initialize variable if not exists\n';
-  code += 'try:\n';
-  code += '    current_anim\n';
-  code += 'except NameError:\n';
-  code += '    current_anim = None\n';
-  code += '\n';
-  code += '# Speed depends on time.sleep_ms() in your loop (16ms=fast, 100ms=slow)\n';
-  code += 'if current_anim is None:\n';
-  code += '    current_anim = create_animation(e, \'' + dropdown_anim + '\')\n';
-  code += '    current_anim.init()\n';
+  code += 'current_anim = create_animation(e, \'' + dropdown_anim + '\')\n';
+  code += 'current_anim.init()\n';
   return code;
 };
 
@@ -207,15 +207,9 @@ Blockly.Blocks['robot_update_animation_nb'] = {
 
 Blockly.Python['robot_update_animation_nb'] = function(block) {
   var code = '# Update animation frame\n';
-  code += '# Initialize variable if not exists\n';
-  code += 'try:\n';
-  code += '    current_anim\n';
-  code += 'except NameError:\n';
-  code += '    current_anim = None\n';
-  code += '\n';
-  code += '# Update animation (auto-restarts when done)\n';
-  code += 'if current_anim is not None:\n';
-  code += '    current_anim.update()  # Returns True always (auto-restart)\n';
+  code += 'is_running = current_anim.update()\n';
+  code += 'if not is_running:\n';
+  code += '    current_anim.init()\n';
   return code;
 };
 
@@ -302,6 +296,16 @@ const PUPIL_SIZE_OPTIONS = [
 ];
 
 /* ================================================================== *
+ *  DROPDOWN OPTIONS — ANIMATE CUSTOM MODE                             *
+ * ================================================================== */
+const ANIMATE_CUSTOM_MODE_OPTIONS = [
+  [Blockly.Msg.ANIMATE_MODE_IDLE,   'idle'],
+  [Blockly.Msg.ANIMATE_MODE_MOVE,   'move'],
+  [Blockly.Msg.ANIMATE_MODE_ACTION, 'action'],
+  [Blockly.Msg.ANIMATE_MODE_ALL,    'all'],
+];
+
+/* ================================================================== *
  *  7. SHOW CUSTOM EXPRESSION                                          *
  * ================================================================== */
 Blockly.Blocks['robot_show_custom'] = {
@@ -358,6 +362,7 @@ Blockly.Blocks['robot_show_custom'] = {
 
 Blockly.Python['robot_show_custom'] = function(block) {
   Blockly.Python.definitions_['import_show_custom'] = 'from expressions import show_custom_expression';
+  Blockly.Python.definitions_['import_set_custom_config'] = 'from animations import set_custom_eyes_config';
 
   var expr   = block.getFieldValue('EXPR');
   var ew     = block.getFieldValue('EW');
@@ -365,13 +370,47 @@ Blockly.Python['robot_show_custom'] = function(block) {
   var rx     = block.getFieldValue('RX');
   var pupil  = block.getFieldValue('PUPIL');
 
-  // Blockly number fields trả về string — ép kiểu int để an toàn
-  var code =
-      'show_custom_expression(e, ' +
+  // Store config for animation block
+  var config_code = 'set_custom_eyes_config(expr=\'' + expr + '\', ew=' + parseInt(ew) + ', eh=' + parseInt(eh) + ', rx=' + parseInt(rx) + ', pupil=\'' + pupil + '\')\n';
+  
+  // Display the expression
+  var code = config_code;
+  code += 'show_custom_expression(e, ' +
       'expr=\'' + expr   + '\', ' +
       'ew='     + parseInt(ew)    + ', ' +
       'eh='     + parseInt(eh)    + ', ' +
       'rx='     + parseInt(rx)    + ', ' +
       'pupil=\''+ pupil  + '\')\n';
+  return code;
+};
+
+/* ================================================================== *
+ *  8. ANIMATE CUSTOM EYES (NON-BLOCKING)                              *
+ * ================================================================== */
+Blockly.Blocks['robot_animate_custom'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "robot_animate_custom",
+      "message0": Blockly.Msg.ROBOT_ANIMATE_CUSTOM_MESSAGE,
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "MODE",
+          "options": ANIMATE_CUSTOM_MODE_OPTIONS
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#7C4EBF",   // Same purple as robot_show_custom
+      "tooltip": Blockly.Msg.ROBOT_ANIMATE_CUSTOM_TOOLTIP,
+      "helpUrl": Blockly.Msg.ROBOT_ANIMATE_CUSTOM_HELPURL
+    });
+  }
+};
+
+Blockly.Python['robot_animate_custom'] = function(block) {
+  Blockly.Python.definitions_['import_animate_custom'] = 'from animations import animate_custom_eyes, set_custom_eyes_config';
+  var mode = block.getFieldValue('MODE');
+  var code = 'animate_custom_eyes(e, mode=\'' + mode + '\')\n';
   return code;
 };

@@ -102,3 +102,23 @@ Blockly.Msg.ROBOT_SHOW_CUSTOM_TOOLTIP =
     "The corner radius is automatically clamped if too large. " +
     "Pupil size scales with the eye width.";
 Blockly.Msg.ROBOT_SHOW_CUSTOM_HELPURL = "";
+
+// ==================================================================
+// ANIMATE CUSTOM EYES (NON-BLOCKING)
+// ==================================================================
+Blockly.Msg.ROBOT_ANIMATE_CUSTOM_MESSAGE = "🎬 Animate custom eyes %1";
+
+Blockly.Msg.ANIMATE_MODE_IDLE = "idle (stay in place)";
+Blockly.Msg.ANIMATE_MODE_MOVE = "move (travel around)";
+Blockly.Msg.ANIMATE_MODE_ACTION = "action (special behavior)";
+Blockly.Msg.ANIMATE_MODE_ALL = "all (cycle: idle → move → action)";
+
+Blockly.Msg.ROBOT_ANIMATE_CUSTOM_TOOLTIP =
+    "NON-BLOCKING: Animate custom eyes with behavior based on expression. " +
+    "idle: Stay in place with expression-specific idle animation. " +
+    "move: Travel around screen with expression-specific movement. " +
+    "action: Perform expression-specific special action. " +
+    "all: Cycle through idle (2s) → move (3s) → action → repeat. " +
+    "Create custom eyes before using this block. " +
+    "Use in 'while True' loop. Call repeatedly each frame.";
+Blockly.Msg.ROBOT_ANIMATE_CUSTOM_HELPURL = "";

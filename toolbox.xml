@@ -16,16 +16,19 @@
       <field name="RX">6</field>
       <field name="PUPIL">medium</field>
     </block>
-    <label text="⚠️ Blocking animation (run until done)"/>
+    <label text="⚠️ Diễn hoạt tức thời (chạy đến khi kết thúc)"/>
     <block type="robot_play_animation">
       <field name="ANIM">blink</field>
       <field name="TIMES">1</field>
       <field name="SPEED">1.0</field>
     </block>
-    <label text="⚡ Non-Blocking animation (run inside main loop)"/>
+    <label text="⚡ Diễn hoạt linh hoạt (chạy trong vòng lặp chính)"/>
     <block type="robot_create_animation_nb">
       <field name="ANIM">blink</field>
     </block>
     <block type="robot_update_animation_nb"/>
+    <block type="robot_animate_custom">
+      <field name="MODE">all</field>
+    </block>
   </category>
 </xml>
