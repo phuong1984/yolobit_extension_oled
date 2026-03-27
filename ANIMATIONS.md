@@ -93,9 +93,14 @@ This document describes all animation behaviors for the custom eyes OLED extensi
 
 | Mode | Behavior |
 |------|----------|
-| **Idle** | Heart pulse (2px amplitude on Y axis) |
-| **Move** | Smooth bounce (speed: 2x, 2y) |
+| **Idle** | Heart-shaped pupils pulse (2px amplitude on Y axis), size depends on pupil setting |
+| **Move** | Smooth bounce (speed: 2x, 2y), heart pupils stay centered |
 | **Action** | Hearts float up from eyes (pulse + floating heart pixels) |
+
+**Pupil sizes (heart-shaped):**
+- `small`: 60% of base size (min 4px)
+- `medium`: 80% of base size (min 6px)
+- `large`: 100% of base size (min 8px)
 
 ---
 

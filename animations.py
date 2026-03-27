@@ -457,12 +457,64 @@ def _idle_wink(e, frame):
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'])
 
 
+def _get_heart_size():
+    """Get heart size based on pupil size config."""
+    cfg = _CUSTOM_EYES_CONFIG
+    pupil = cfg.get('pupil', 'medium')
+    base_size = min(cfg['ew'], cfg['eh']) - 6
+    
+    if pupil == 'small':
+        return max(4, int(base_size * 0.6))
+    elif pupil == 'large':
+        return max(8, int(base_size * 1.0))
+    else:  # medium
+        return max(6, int(base_size * 0.8))
+
+
+def _draw_heart_at(e, cx, cy, size=None):
+    """Draw a heart-shaped pupil at specified position."""
+    if size is None:
+        size = _get_heart_size()
+    
+    s = size // 2
+    for dy in range(-s, s + 1):
+        for dx in range(-s - 1, s + 2):
+            nx = dx / (s + 1)
+            ny = -dy / s
+            val = (nx**2 + ny**2 - 1)**3 - nx**2 * ny**3
+            if val <= 0:
+                px = int(cx + dx)
+                py = int(cy + dy)
+                if 0 <= px < 128 and 0 <= py < 64:
+                    e.oled.pixel(px, py, 1)
+
+
+def _draw_custom_eyes_with_heart(e, cx, cy, closed=False, half_open=False, pulse=0):
+    """Draw custom eye with heart-shaped pupil."""
+    cfg = _CUSTOM_EYES_CONFIG
+    pr = _get_pupil_r()
+    
+    # Draw eye white
+    e.draw_rounded_rect_eye(
+        cx, cy,
+        ew=cfg['ew'], eh=cfg['eh'], rx=cfg['rx'],
+        pupil_dx=0, pupil_dy=pulse,
+        pupil_r=pr, closed=closed, half_open=half_open
+    )
+    
+    # Clear interior and draw heart
+    if not closed and not half_open:
+        e.clip_rect(cx - cfg['ew']//2 + 2, cy - cfg['eh']//2 + 2,
+                    cfg['ew'] - 4, cfg['eh'] - 4, 0)
+        _draw_heart_at(e, cx, cy + pulse)
+
+
 def _idle_love(e, frame):
     """Love idle: heart pulse."""
     cx, cy = 64 + _CUSTOM_ANIM_STATE['x_offset'], 32 + _CUSTOM_ANIM_STATE['y_offset']
     pulse = int(2 * math.sin(2 * math.pi * frame / 40))
-    _draw_custom_eyes_at(e, cx - 32, cy + pulse)
-    _draw_custom_eyes_at(e, cx + 32, cy + pulse)
+    _draw_custom_eyes_with_heart(e, cx - 32, cy, pulse=pulse)
+    _draw_custom_eyes_with_heart(e, cx + 32, cy, pulse=pulse)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
 
@@ -794,8 +846,8 @@ def _action_love(e, frame):
     """Love action: hearts float up."""
     cx, cy = 64 + _CUSTOM_ANIM_STATE['x_offset'], 32 + _CUSTOM_ANIM_STATE['y_offset']
     pulse = int(3 * math.sin(2 * math.pi * frame / 30))
-    _draw_custom_eyes_at(e, cx - 32, cy + pulse)
-    _draw_custom_eyes_at(e, cx + 32, cy + pulse)
+    _draw_custom_eyes_with_heart(e, cx - 32, cy, pulse=pulse)
+    _draw_custom_eyes_with_heart(e, cx + 32, cy, pulse=pulse)
     _draw_custom_brow(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
     _draw_custom_mouth(e, x_offset=_CUSTOM_ANIM_STATE['x_offset'], y_offset=_CUSTOM_ANIM_STATE['y_offset'] + pulse)
     # Draw floating hearts - clamp to screen

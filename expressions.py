@@ -500,12 +500,22 @@ def expr_custom_wink(e, ew=28, eh=28, rx=10, pupil_size="medium"):
 
 
 def expr_custom_love(e, ew=28, eh=28, rx=10, pupil_size="medium"):
-    # Love: trái tim thay con ngươi — không cần pupil_r
+    # Love: trái tim thay con ngươi — kích thước tim phụ thuộc pupil_size
+    base_size = max(6, min(ew, eh) - 6)
+    
+    # Tính kích thước tim theo pupil_size
+    if pupil_size == "small":
+        heart_size = int(max(4, base_size * 0.6))
+    elif pupil_size == "large":
+        heart_size = int(max(8, base_size * 1.0))
+    else:  # medium
+        heart_size = int(max(6, base_size * 0.8))
+    
     for cx in (EYE_L_CX, EYE_R_CX):
         e.draw_rounded_rect_eye(cx, EYE_CY, ew=ew, eh=eh, rx=rx)
         e.clip_rect(cx - ew // 2 + 2, EYE_CY - eh // 2 + 2,
                     ew - 4, eh - 4, 0)
-        _draw_heart(e, cx, EYE_CY, size=max(6, min(ew, eh) - 6))
+        _draw_heart(e, cx, EYE_CY, size=heart_size)
     e.draw_mouth(smile=10, width=26)
 
 
